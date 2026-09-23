@@ -37,7 +37,8 @@ function reducer(state: WorldMapState, action: WorldMapAction): WorldMapState {
       return {
         selectedRepository: action.repoKey,
         playerPosition: state.playerPosition,
-        commandOpen: false,
+        // Already standing on the node: no move happens, so open the Command Window right away.
+        commandOpen: state.playerPosition === action.repoKey,
         moving: state.playerPosition !== action.repoKey,
       };
     }

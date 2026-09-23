@@ -186,7 +186,8 @@ export function WorldMap({ username, repos }: WorldMapProps) {
           aria-label="プレイヤーキャラクター"
           onTransitionEnd={handleTransitionEnd}
           className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2 text-2xl motion-safe:transition-[left,top] motion-safe:duration-[600ms] motion-safe:ease-in-out"
-          style={{ left: `${targetPosition[0]}%`, top: `${targetPosition[1]}%` }}
+          // Offset below the node's center so the character doesn't cover the node's labels.
+          style={{ left: `${targetPosition[0]}%`, top: `${targetPosition[1] + 10}%` }}
         >
           🧙
         </div>
