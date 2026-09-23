@@ -3,6 +3,7 @@ import { RpgPanel } from "@commit-quest/ui";
 import { useEffect, useRef } from "react";
 import { useMediaQuery } from "../lib/use-media-query";
 import { HOME_POSITION, useWorldMapState } from "../features/world-map/useWorldMapState";
+import { CommandWindow } from "./CommandWindow";
 
 export type WorldMapProps = {
   username: string;
@@ -66,7 +67,7 @@ function MapNode({
 export function WorldMap({ username, repos }: WorldMapProps) {
   const mainRepos = repos.slice(0, 8);
   const overflowRepos = repos.slice(8);
-  const { state, selectNode, arrived } = useWorldMapState();
+  const { state, selectNode, arrived, returnHome } = useWorldMapState();
 
   const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const isDesktopLayout = useMediaQuery("(min-width: 640px)");
@@ -83,16 +84,21 @@ export function WorldMap({ username, repos }: WorldMapProps) {
     }
   });
 
+  // While moving, the animation target is the node being walked TO
+  // (selectedRepository, or HOME when returning); once settled it's simply
+  // the character's current logical position.
+  const moveTargetKey = state.moving ? state.selectedRepository : state.playerPosition;
   const targetPosition =
-    state.playerPosition === HOME_POSITION ? HOME_CENTER : (positionByKey.get(state.playerPosition) ?? HOME_CENTER);
+    moveTargetKey && moveTargetKey !== HOME_POSITION ? (positionByKey.get(moveTargetKey) ?? HOME_CENTER) : HOME_CENTER;
 
-  // While moving, without a CSS transition to rely on (reduced motion, or a
-  // node outside the animated grid) arrival happens immediately.
+  // Without a CSS transition to rely on (reduced motion, or a node outside
+  // the animated grid, e.g. mobile / "Other Areas") arrival happens immediately.
+  const targetHasKnownPosition = moveTargetKey === null || positionByKey.has(moveTargetKey ?? "");
   useEffect(() => {
     if (!state.moving) {
       return;
     }
-    if (!canAnimate || !positionByKey.has(state.selectedRepository ?? "")) {
+    if (!canAnimate || !targetHasKnownPosition) {
       arrived();
       return;
     }
@@ -102,8 +108,12 @@ export function WorldMap({ username, repos }: WorldMapProps) {
     return () => {
       window.clearTimeout(fallbackTimerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- positionByKey is rebuilt every render from `repos`
-  }, [state.moving, state.selectedRepository, canAnimate, arrived]);
+  }, [state.moving, canAnimate, targetHasKnownPosition, arrived]);
+
+  const selectedRepo =
+    state.selectedRepository !== null
+      ? [...mainRepos, ...overflowRepos].find((repo) => repoKey(repo) === state.selectedRepository)
+      : undefined;
 
   function handleTransitionEnd(e: React.TransitionEvent<HTMLDivElement>) {
     if (e.target !== e.currentTarget || e.propertyName !== "left") {
@@ -214,6 +224,10 @@ export function WorldMap({ username, repos }: WorldMapProps) {
             ))}
           </div>
         </div>
+      ) : null}
+
+      {state.commandOpen && selectedRepo ? (
+        <CommandWindow username={username} repo={selectedRepo} onClose={returnHome} />
       ) : null}
     </div>
   );

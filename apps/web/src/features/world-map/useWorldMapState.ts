@@ -24,6 +24,7 @@ const initialState: WorldMapState = {
 type WorldMapAction =
   | { type: "SELECT_NODE"; repoKey: string }
   | { type: "ARRIVED" }
+  | { type: "RETURN_HOME" }
   | { type: "RESET" };
 
 function reducer(state: WorldMapState, action: WorldMapAction): WorldMapState {
@@ -43,10 +44,22 @@ function reducer(state: WorldMapState, action: WorldMapAction): WorldMapState {
     case "ARRIVED":
       return {
         ...state,
-        playerPosition: state.selectedRepository ?? state.playerPosition,
+        playerPosition: state.selectedRepository ?? HOME_POSITION,
         moving: false,
-        commandOpen: true,
+        // Only opens the Command Window when arriving AT a repository, not when returning home.
+        commandOpen: state.selectedRepository !== null,
       };
+    case "RETURN_HOME": {
+      if (state.moving) {
+        return state;
+      }
+      return {
+        selectedRepository: null,
+        playerPosition: state.playerPosition,
+        commandOpen: false,
+        moving: state.playerPosition !== HOME_POSITION,
+      };
+    }
     case "RESET":
       return initialState;
     default:
@@ -65,9 +78,13 @@ export function useWorldMapState() {
     dispatch({ type: "ARRIVED" });
   }, []);
 
+  const returnHome = useCallback(() => {
+    dispatch({ type: "RETURN_HOME" });
+  }, []);
+
   const reset = useCallback(() => {
     dispatch({ type: "RESET" });
   }, []);
 
-  return { state, selectNode, arrived, reset };
+  return { state, selectNode, arrived, returnHome, reset };
 }
