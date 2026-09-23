@@ -1,0 +1,3 @@
+# Copy to .dev.vars for local development (never commit .dev.vars).
+# Optional: without it, requests to GitHub run unauthenticated (60 req/h).
+GITHUB_TOKEN=

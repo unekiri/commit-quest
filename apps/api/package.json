@@ -1,0 +1,22 @@
+{
+  "name": "@commit-quest/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "hono": "^4.13.8"
+  },
+  "devDependencies": {
+    "@commit-quest/config": "workspace:*",
+    "@commit-quest/types": "workspace:*",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.136.3"
+  }
+}

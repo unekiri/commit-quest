@@ -1,0 +1,16 @@
+{
+  "name": "@commit-quest/config",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./tsconfig/base.json": "./src/tsconfig/base.json",
+    "./tsconfig/react.json": "./src/tsconfig/react.json",
+    "./tsconfig/worker.json": "./src/tsconfig/worker.json",
+    "./eslint": "./src/eslint.config.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "typescript-eslint": "^8.70.1"
+  }
+}

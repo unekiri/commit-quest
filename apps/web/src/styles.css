@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* Pick up Tailwind classes used inside packages/ui components. */
+@source "../../../packages/ui/src";
+
+@theme {
+  --color-rpg-bg: #101018;
+  --color-rpg-panel: #1c1c2a;
+  --color-rpg-border: #4a4a68;
+  --color-rpg-text: #e6e6f0;
+  --color-rpg-text-muted: #9a9ab4;
+  --color-rpg-gold: #d6b85a;
+  --color-rpg-hp: #c94b4b;
+  --color-rpg-xp: #5788c7;
+
+  --font-rpg: "Courier New", ui-monospace, monospace;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-rpg);
+  }
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--color-rpg-bg);
+    color: var(--color-rpg-text);
+  }
+
+  body {
+    min-height: 100vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes quest-clear-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-quest-clear {
+  animation: quest-clear-in 0.4s ease-out both;
+}
+
+.animate-page-fade-in {
+  animation: page-fade-in 0.25s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-quest-clear,
+  .animate-page-fade-in {
+    animation: none;
+  }
+}

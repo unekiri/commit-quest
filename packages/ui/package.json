@@ -1,0 +1,21 @@
+{
+  "name": "@commit-quest/ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@commit-quest/config": "workspace:*",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.3"
+  }
+}

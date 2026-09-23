@@ -1,0 +1,20 @@
+import { QueryClient } from "@tanstack/react-query";
+import { ApiError } from "./api-client";
+
+/**
+ * staleTime 5min: Query Cache設計(§12/§13)。ApiErrorの4xxはリトライしない。
+ * それ以外は1回だけリトライする。
+ */
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      retry: (failureCount, error) => {
+        if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+          return false;
+        }
+        return failureCount < 1;
+      },
+    },
+  },
+});

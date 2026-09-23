@@ -1,0 +1,4 @@
+{
+  "extends": "@commit-quest/config/tsconfig/react.json",
+  "include": ["src"]
+}
