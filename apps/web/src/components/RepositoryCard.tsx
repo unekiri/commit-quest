@@ -15,6 +15,7 @@ export function RepositoryCard({ username, repo }: RepositoryCardProps) {
       to="/users/$username/repos/$owner/$repo"
       params={{ username, owner: repo.owner, repo: repo.name }}
       search={{ page: 1 }}
+      preload="intent"
       className="motion-safe:transition-transform block border-2 border-rpg-border bg-rpg-panel p-3 motion-safe:hover:-translate-y-1 hover:border-rpg-gold"
     >
       <span className="truncate font-bold text-rpg-text">{repo.name}</span>

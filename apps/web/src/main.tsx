@@ -6,7 +6,13 @@ import { queryClient } from "./lib/query-client";
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+  routeTree,
+  context: { queryClient },
+  // Query owns freshness (staleTime); the router should not add its own
+  // separate "don't preload again within N ms" window on top of that.
+  defaultPreloadStaleTime: 0,
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

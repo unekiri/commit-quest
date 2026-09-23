@@ -1,5 +1,10 @@
 import { EmptyState } from "@commit-quest/ui";
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import { createRootRouteWithContext, Link, Outlet } from "@tanstack/react-router";
+
+export type RouterContext = {
+  queryClient: QueryClient;
+};
 
 function NotFound() {
   return (
@@ -29,7 +34,7 @@ function RootLayout() {
   );
 }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
   notFoundComponent: NotFound,
 });

@@ -1,8 +1,8 @@
 import { EmptyState, ErrorPanel, LevelBadge, LoadingPanel, RpgButton, RpgPanel, XpBar } from "@commit-quest/ui";
-import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { CommitQuestCard } from "../../../../../../components/CommitQuestCard";
-import { COMMITS_PAGE_SIZE } from "../../../../../../features/github/queries";
-import { useGitHubCommits, useGitHubRepository } from "../../../../../../features/github/hooks";
+import { COMMITS_PAGE_SIZE, commitsQueryOptions, repositoryQueryOptions } from "../../../../../../features/github/queries";
 import { levelInfoFromCommitCount, questNumber } from "../../../../../../features/rpg/calculations";
 import { toFriendlyErrorMessage } from "../../../../../../lib/error-messages";
 
@@ -18,22 +18,11 @@ function RepositoryDetailPage() {
   const { page } = Route.useSearch();
   const navigate = Route.useNavigate();
 
-  const repoQuery = useGitHubRepository(owner, repo, username);
-  const commitsQuery = useGitHubCommits(owner, repo, username, page);
-
-  if (repoQuery.isPending || commitsQuery.isPending) {
-    return <LoadingPanel />;
-  }
-
-  if (repoQuery.isError) {
-    return <ErrorPanel message={toFriendlyErrorMessage(repoQuery.error)} onRetry={() => void repoQuery.refetch()} />;
-  }
-
-  if (commitsQuery.isError) {
-    return (
-      <ErrorPanel message={toFriendlyErrorMessage(commitsQuery.error)} onRetry={() => void commitsQuery.refetch()} />
-    );
-  }
+  // Data for this page was already fetched (or is currently in flight) by
+  // the route's loader via `queryClient.ensureQueryData`, so this only
+  // reads the cache: Suspense/pendingComponent already covered the wait.
+  const repoQuery = useSuspenseQuery(repositoryQueryOptions(owner, repo, username));
+  const commitsQuery = useSuspenseQuery(commitsQueryOptions(owner, repo, username, page));
 
   const repoData = repoQuery.data;
   const commits = commitsQuery.data.items;
@@ -102,9 +91,38 @@ function RepositoryDetailPage() {
   );
 }
 
+/**
+ * Retry after a loader error: reset the cached queries so they're
+ * refetched (not just re-read as an errored cache entry), then re-run the
+ * route's loader via `router.invalidate()`.
+ */
+function RepositoryDetailErrorComponent({ error }: { error: unknown }) {
+  const router = useRouter();
+  const { username, owner, repo } = Route.useParams();
+  const { page } = Route.useSearch();
+  const { queryClient } = Route.useRouteContext();
+
+  function handleRetry() {
+    void queryClient.resetQueries({ queryKey: repositoryQueryOptions(owner, repo, username).queryKey });
+    void queryClient.resetQueries({ queryKey: commitsQueryOptions(owner, repo, username, page).queryKey });
+    void router.invalidate();
+  }
+
+  return <ErrorPanel message={toFriendlyErrorMessage(error)} onRetry={handleRetry} />;
+}
+
 export const Route = createFileRoute("/users/$username/repos/$owner/$repo/")({
   validateSearch: (search: Record<string, unknown>): RepoDetailSearch => ({
     page: parsePage(search.page),
   }),
+  loaderDeps: ({ search }) => ({ page: search.page }),
+  loader: async ({ context, params, deps }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(repositoryQueryOptions(params.owner, params.repo, params.username)),
+      context.queryClient.ensureQueryData(commitsQueryOptions(params.owner, params.repo, params.username, deps.page)),
+    ]);
+  },
+  pendingComponent: LoadingPanel,
+  errorComponent: RepositoryDetailErrorComponent,
   component: RepositoryDetailPage,
 });

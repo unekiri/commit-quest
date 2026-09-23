@@ -119,13 +119,48 @@ GitHub Tokenは`apps/api`（サーバー側）にのみ保持され、Web（ブ�
 - Repositoryへの書き込み、GitHub webhook、管理画面、課金
 - 高度なアクセシビリティ最適化、本番レベルのセキュリティ監査
 
+## 改善内容（面接前の改善対応）
+
+MVP完成後、実際に動作確認した際に見つかった課題を`docs/improvement-proposal.md`に整理し、以下を実施した。
+
+### GitHub APIのN+1リクエスト解消
+
+Repository一覧取得時、以前は各RepositoryのCommit数を`per_page=1`のCommit取得で個別に問い合わせており、Repositoryが30件あれば最大31リクエスト（一覧1回 + Commit数取得30回）が発生し、GitHubのRate Limitに到達することがあった。
+
+```text
+変更前: GET /users/:username/repos → 1 + N requests（Nはrepo数、最大30）
+変更後: GET /users/:username/repos → 1 request固定
+```
+
+`RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World MapとRepositoryCardの表示は名前・Language・最終更新日のみに簡素化し、Repository DetailでCommit数から算出する「Quest XP」「Level」を新たに表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標である旨を明記）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止し、追加のAPI呼び出しなしで得られるGitHub実データ（Public Repositories / Active Repository / Last Updated）を表示する「GitHub Stats」パネルに置き換えた。
+
+### State責務の分離（World Mapのインタラクション強化）
+
+World MapのRepositoryノードはクリックしても即座に遷移せず、以下の流れにした。
+
+```text
+ノード選択 → キャラクター(🧙)がHOMEから対象ノードへCSS transitionで移動 → 到着 → Command Window表示 → 「冒険する」でRepository Detailへ遷移
+```
+
+キャラクター位置・移動中フラグ・Command Windowの開閉といったClient StateはServer State（TanStack Query）やURL State（TanStack Router）と混在させず、`useWorldMapState`（`useReducer`）に分離して管理している。
+
+```text
+GitHub Data              → TanStack Query
+URL / Route（page等）     → TanStack Router
+キャラクター位置・Command Window → React State（useWorldMapState）
+```
+
+### Router loaderとQuery Cacheの連携
+
+Repository Detailルートで、`createRootRouteWithContext`によりRouter contextへ`queryClient`を渡し、`loader`から`queryClient.ensureQueryData`でRepositoryとCommit一覧のデータを`Promise.all`で並行取得するようにした。コンポーネント側は`useSuspenseQuery`でそのキャッシュを読むだけになり、Loading/ErrorはRouteの`pendingComponent` / `errorComponent`に委譲している。Query Cacheが既にあれば再利用されるため、同じRepositoryへ再度遷移した際の待ち時間が減る。Routerの`defaultPreloadStaleTime`は`0`にし、鮮度判定はQuery側（`staleTime`）に一本化した。
+
 ## Future Work
 
 - Repository一覧・World Mapの複数ページ対応（現状は取得可能な最初の1ページのみで表示）
 - GitHub OAuthによるログインとprivate repositoryの閲覧
 - Commit差分（diff）の表示
-- World Mapのノード配置・アニメーションの作り込み
 - E2Eテストの追加（現状はPlaywright MCPによる手動確認のみ）
+- Cloudflare Cacheの導入（`docs/improvement-proposal.md` Priority 5）
 
 ## 既知の制約
 
