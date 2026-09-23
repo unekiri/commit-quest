@@ -1,7 +1,6 @@
 import type { RepositoryDto } from "@commit-quest/types";
-import { LevelBadge, RpgPanel } from "@commit-quest/ui";
+import { RpgPanel } from "@commit-quest/ui";
 import { Link } from "@tanstack/react-router";
-import { levelInfoFromCommitCount } from "../features/rpg/calculations";
 
 export type WorldMapProps = {
   username: string;
@@ -25,7 +24,6 @@ const NODE_POSITIONS: Record<(typeof NODE_AREAS)[number], [number, number]> = {
 };
 
 function MapNode({ username, repo }: { username: string; repo: RepositoryDto }) {
-  const { level, progress } = levelInfoFromCommitCount(repo.commitCount);
   const updated = new Date(repo.updatedAt).toLocaleDateString("ja-JP");
 
   return (
@@ -36,12 +34,8 @@ function MapNode({ username, repo }: { username: string; repo: RepositoryDto }) 
       className="motion-safe:transition-transform flex h-full flex-col items-center justify-center gap-1 border-2 border-rpg-border bg-rpg-panel p-2 text-center motion-safe:hover:-translate-y-1 hover:border-rpg-gold"
     >
       <span className="w-full truncate text-xs font-bold text-rpg-text">{repo.name}</span>
-      <LevelBadge level={level} />
-      <span className="text-[10px] text-rpg-text-muted">{repo.commitCount} commits</span>
+      {repo.language ? <span className="text-[10px] text-rpg-text-muted">{repo.language}</span> : null}
       <span className="text-[10px] text-rpg-text-muted">{updated}</span>
-      <div className="h-1.5 w-full border border-rpg-border bg-rpg-bg">
-        <div className="h-full bg-rpg-xp" style={{ width: `${Math.min(1, Math.max(0, progress)) * 100}%` }} />
-      </div>
     </Link>
   );
 }

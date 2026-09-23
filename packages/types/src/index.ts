@@ -21,6 +21,14 @@ export type RepositoryDto = {
   forks: number;
   updatedAt: string;
   htmlUrl: string;
+};
+
+/**
+ * Repository detail response: adds `commitCount`, which is only fetched
+ * for a single repository (never for the list) to avoid an N+1 GitHub API
+ * request pattern. Used to derive the Commit Quest XP / Level metrics.
+ */
+export type RepositoryDetailDto = RepositoryDto & {
   commitCount: number;
 };
 

@@ -2,6 +2,7 @@ import type {
   CommitDetailDto,
   CommitDto,
   GitHubUserDto,
+  RepositoryDetailDto,
   RepositoryDto,
 } from "@commit-quest/types";
 import type {
@@ -22,7 +23,7 @@ export function mapUser(raw: GitHubUserApi): GitHubUserDto {
   };
 }
 
-export function mapRepository(raw: GitHubRepoApi, commitCount: number): RepositoryDto {
+export function mapRepository(raw: GitHubRepoApi): RepositoryDto {
   return {
     owner: raw.owner.login,
     name: raw.name,
@@ -32,6 +33,12 @@ export function mapRepository(raw: GitHubRepoApi, commitCount: number): Reposito
     forks: raw.forks_count,
     updatedAt: raw.updated_at,
     htmlUrl: raw.html_url,
+  };
+}
+
+export function mapRepositoryDetail(raw: GitHubRepoApi, commitCount: number): RepositoryDetailDto {
+  return {
+    ...mapRepository(raw),
     commitCount,
   };
 }

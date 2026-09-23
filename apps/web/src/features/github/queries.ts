@@ -2,7 +2,7 @@ import type {
   CommitDetailDto,
   CommitListResponse,
   GitHubUserDto,
-  RepositoryDto,
+  RepositoryDetailDto,
   RepositoryListResponse,
 } from "@commit-quest/types";
 import { queryOptions } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ export function repositoryQueryOptions(owner: string, repo: string, author: stri
   return queryOptions({
     queryKey: ["github", "repo", owner, repo, { author }] as const,
     queryFn: () =>
-      apiClient.get<RepositoryDto>(
+      apiClient.get<RepositoryDetailDto>(
         `/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}?author=${encodeURIComponent(author)}`,
       ),
   });

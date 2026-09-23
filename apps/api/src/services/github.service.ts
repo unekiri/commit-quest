@@ -1,13 +1,13 @@
 import type {
   CommitDetailDto,
   CommitListResponse,
-  RepositoryDto,
+  RepositoryDetailDto,
   RepositoryListResponse,
   GitHubUserDto,
 } from "@commit-quest/types";
 import { githubFetch } from "../clients/github.client";
 import { githubErrorFromResponse } from "../lib/errors";
-import { mapCommit, mapCommitDetail, mapRepository, mapUser } from "../mappers/github.mapper";
+import { mapCommit, mapCommitDetail, mapRepository, mapRepositoryDetail, mapUser } from "../mappers/github.mapper";
 import type {
   GitHubCommitApi,
   GitHubCommitDetailApi,
@@ -84,13 +84,8 @@ export async function getRepositories(
     throw githubErrorFromResponse(res);
   }
   const raw = await res.json<GitHubRepoApi[]>();
-  const nonForks = raw.filter((repo) => !repo.fork);
-  const items = await Promise.all(
-    nonForks.map(async (repo) => {
-      const commitCount = await getCommitCount(repo.owner.login, repo.name, username, env);
-      return mapRepository(repo, commitCount);
-    }),
-  );
+  // N+1 対策: 一覧取得ではCommit数を取得しない（GitHubへの呼び出しはこの1回のみ）。
+  const items = raw.filter((repo) => !repo.fork).map(mapRepository);
   return {
     items,
     page,
@@ -104,14 +99,14 @@ export async function getRepository(
   repo: string,
   author: string | undefined,
   env: Env,
-): Promise<RepositoryDto> {
+): Promise<RepositoryDetailDto> {
   const res = await githubFetch(`/repos/${owner}/${repo}`, env);
   if (!res.ok) {
     throw githubErrorFromResponse(res);
   }
   const raw = await res.json<GitHubRepoApi>();
   const commitCount = await getCommitCount(owner, repo, author, env);
-  return mapRepository(raw, commitCount);
+  return mapRepositoryDetail(raw, commitCount);
 }
 
 export async function getCommits(

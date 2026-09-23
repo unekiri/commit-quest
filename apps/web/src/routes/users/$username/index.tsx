@@ -1,6 +1,7 @@
 import { EmptyState, ErrorPanel, LoadingPanel } from "@commit-quest/ui";
 import { createFileRoute } from "@tanstack/react-router";
 import { RepositoryCard } from "../../../components/RepositoryCard";
+import { GitHubStatsPanel } from "../../../components/GitHubStatsPanel";
 import { PlayerStatus } from "../../../components/PlayerStatus";
 import { useGitHubRepositories, useGitHubUser } from "../../../features/github/hooks";
 import { toFriendlyErrorMessage } from "../../../lib/error-messages";
@@ -23,11 +24,12 @@ function DashboardPage() {
   }
 
   const repos = reposQuery.data.items;
-  const totalCommitCount = repos.reduce((sum, repo) => sum + repo.commitCount, 0);
+  const activeRepository = repos[0] ?? null;
 
   return (
     <div className="flex flex-col gap-4">
-      <PlayerStatus user={userQuery.data} totalCommitCount={totalCommitCount} />
+      <PlayerStatus user={userQuery.data} />
+      <GitHubStatsPanel user={userQuery.data} activeRepository={activeRepository} />
       <div>
         <h3 className="mb-2 text-sm font-bold text-rpg-gold">Repositories</h3>
         {repos.length === 0 ? (

@@ -1,4 +1,4 @@
-import { EmptyState, ErrorPanel, LevelBadge, LoadingPanel, RpgButton, RpgPanel } from "@commit-quest/ui";
+import { EmptyState, ErrorPanel, LevelBadge, LoadingPanel, RpgButton, RpgPanel, XpBar } from "@commit-quest/ui";
 import { createFileRoute } from "@tanstack/react-router";
 import { CommitQuestCard } from "../../../../../../components/CommitQuestCard";
 import { COMMITS_PAGE_SIZE } from "../../../../../../features/github/queries";
@@ -37,7 +37,7 @@ function RepositoryDetailPage() {
 
   const repoData = repoQuery.data;
   const commits = commitsQuery.data.items;
-  const { level } = levelInfoFromCommitCount(repoData.commitCount);
+  const { level, xp, xpInLevel, progress } = levelInfoFromCommitCount(repoData.commitCount);
   const updated = new Date(repoData.updatedAt).toLocaleString("ja-JP");
 
   function goToPage(nextPage: number) {
@@ -48,14 +48,22 @@ function RepositoryDetailPage() {
     <div className="flex flex-col gap-4">
       <RpgPanel title={repoData.name}>
         <div className="flex flex-wrap items-center gap-2">
-          <LevelBadge level={level} />
           {repoData.language ? <span className="text-xs text-rpg-text-muted">{repoData.language}</span> : null}
           <span className="text-xs text-rpg-text-muted">★ {repoData.stars}</span>
           <span className="text-xs text-rpg-text-muted">Forks {repoData.forks}</span>
           <span className="text-xs text-rpg-text-muted">Updated {updated}</span>
-          <span className="text-xs text-rpg-text-muted">{repoData.commitCount} commits</span>
         </div>
         {repoData.description ? <p className="mt-2 text-sm text-rpg-text">{repoData.description}</p> : null}
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-rpg-gold">Quest XP</span>
+          <LevelBadge level={level} />
+          <span className="text-xs text-rpg-text-muted">{xp} XP（{repoData.commitCount} commits × 10）</span>
+        </div>
+        <XpBar xpInLevel={xpInLevel} progress={progress} className="mt-2 max-w-sm" />
+        <p className="mt-1 text-[11px] text-rpg-text-muted">
+          ※ Quest XP / LevelはGitHubの正式な値ではなく、Commit Quest独自のゲーム指標です。
+        </p>
       </RpgPanel>
 
       <div>
