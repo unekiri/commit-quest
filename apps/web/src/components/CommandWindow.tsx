@@ -1,6 +1,6 @@
 import type { RepositoryDto } from "@commit-quest/types";
 import { RpgPanel } from "@commit-quest/ui";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 export type CommandWindowProps = {
@@ -25,6 +25,7 @@ const MENU_ITEMS: { key: MenuKey; label: string }[] = [
  */
 export function CommandWindow({ username, repo, onClose }: CommandWindowProps) {
   const navigate = useNavigate();
+  const router = useRouter();
   const [cursor, setCursor] = useState(0);
   const [showInfo, setShowInfo] = useState(false);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -34,6 +35,19 @@ export function CommandWindow({ username, repo, onClose }: CommandWindowProps) {
   useEffect(() => {
     itemRefs.current[0]?.focus();
   }, []);
+
+  // This component only mounts once selectedRepository is confirmed and the
+  // window is open, so this is the natural point to warm the Repository
+  // Detail cache for "冒険する" — it runs the route's own loader
+  // (ensureQueryData), so no Query key is duplicated here, and a failure is
+  // safe to ignore since navigation would surface it via errorComponent.
+  useEffect(() => {
+    void router.preloadRoute({
+      to: "/users/$username/repos/$owner/$repo",
+      params: { username, owner: repo.owner, repo: repo.name },
+      search: { page: 1 },
+    });
+  }, [router, username, repo.owner, repo.name]);
 
   useEffect(() => {
     if (showInfo) {
