@@ -1,22 +1,17 @@
-import { ErrorPanel, LoadingPanel, RpgPanel } from "@commit-quest/ui";
+import { LoadingPanel, RpgPanel } from "@commit-quest/ui";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { RouteErrorPanel } from "../../../../../../../components/RouteErrorPanel";
+import { commitDetailQueryOptions } from "../../../../../../../features/github/queries";
 import { COMMIT_DETAIL_XP } from "../../../../../../../features/rpg/calculations";
-import { useGitHubCommitDetail } from "../../../../../../../features/github/hooks";
-import { toFriendlyErrorMessage } from "../../../../../../../lib/error-messages";
 
 function CommitDetailPage() {
   const { username, owner, repo, sha } = Route.useParams();
-  const commitQuery = useGitHubCommitDetail(owner, repo, sha);
 
-  if (commitQuery.isPending) {
-    return <LoadingPanel />;
-  }
-
-  if (commitQuery.isError) {
-    return (
-      <ErrorPanel message={toFriendlyErrorMessage(commitQuery.error)} onRetry={() => void commitQuery.refetch()} />
-    );
-  }
+  // Data for this page was already fetched (or is currently in flight) by
+  // the route's loader via `queryClient.ensureQueryData`, so this only
+  // reads the cache: Suspense/pendingComponent already covered the wait.
+  const commitQuery = useSuspenseQuery(commitDetailQueryOptions(owner, repo, sha));
 
   const commit = commitQuery.data;
   const title = commit.message.split("\n")[0];
@@ -84,6 +79,19 @@ function CommitDetailPage() {
   );
 }
 
+function CommitDetailErrorComponent({ error }: { error: unknown }) {
+  const { owner, repo, sha } = Route.useParams();
+  const { queryClient } = Route.useRouteContext();
+
+  return (
+    <RouteErrorPanel error={error} queryClient={queryClient} queryKeys={[commitDetailQueryOptions(owner, repo, sha).queryKey]} />
+  );
+}
+
 export const Route = createFileRoute("/users/$username/repos/$owner/$repo/commits/$sha")({
+  loader: ({ context, params }) =>
+    context.queryClient.ensureQueryData(commitDetailQueryOptions(params.owner, params.repo, params.sha)),
+  pendingComponent: LoadingPanel,
+  errorComponent: CommitDetailErrorComponent,
   component: CommitDetailPage,
 });

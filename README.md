@@ -154,6 +154,8 @@ URL / Route（page等）     → TanStack Router
 
 Repository Detailルートで、`createRootRouteWithContext`によりRouter contextへ`queryClient`を渡し、`loader`から`queryClient.ensureQueryData`でRepositoryとCommit一覧のデータを`Promise.all`で並行取得するようにした。コンポーネント側は`useSuspenseQuery`でそのキャッシュを読むだけになり、Loading/ErrorはRouteの`pendingComponent` / `errorComponent`に委譲している。Query Cacheが既にあれば再利用されるため、同じRepositoryへ再度遷移した際の待ち時間が減る。Routerの`defaultPreloadStaleTime`は`0`にし、鮮度判定はQuery側（`staleTime`）に一本化した。
 
+Commit Detailルートも同方式に統一し、`loader`から`commitDetailQueryOptions`を`ensureQueryData`する形にした。Repository DetailとCommit Detailで共通の`errorComponent`ロジック（キャッシュのreset + `router.invalidate()`）は`RouteErrorPanel`に切り出して両ルートで再利用している。また、World MapでCommand Windowが開いた時点（`selectedRepository`確定時）に`router.preloadRoute`でRepository Detailのルートloaderを先読みし、「冒険する」選択時の体感待ち時間を減らしている。
+
 ## Future Work
 
 - Repository一覧・World Mapの複数ページ対応（現状は取得可能な最初の1ページのみで表示）

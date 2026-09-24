@@ -27,6 +27,7 @@ export function CommitQuestCard({ username, owner, repo, commit, questNumber }: 
       <Link
         to="/users/$username/repos/$owner/$repo/commits/$sha"
         params={{ username, owner, repo, sha: commit.sha }}
+        preload="intent"
         className="motion-safe:transition-transform mt-3 inline-block cursor-pointer border-2 border-rpg-border bg-rpg-bg px-4 py-2 text-sm font-bold tracking-wide text-rpg-text motion-safe:hover:-translate-y-0.5 hover:bg-rpg-panel"
       >
         詳細を見る

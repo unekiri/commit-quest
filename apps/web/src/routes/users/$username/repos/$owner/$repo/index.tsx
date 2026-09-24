@@ -1,10 +1,10 @@
-import { EmptyState, ErrorPanel, LevelBadge, LoadingPanel, RpgButton, RpgPanel, XpBar } from "@commit-quest/ui";
+import { EmptyState, LevelBadge, LoadingPanel, RpgButton, RpgPanel, XpBar } from "@commit-quest/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { CommitQuestCard } from "../../../../../../components/CommitQuestCard";
+import { RouteErrorPanel } from "../../../../../../components/RouteErrorPanel";
 import { COMMITS_PAGE_SIZE, commitsQueryOptions, repositoryQueryOptions } from "../../../../../../features/github/queries";
 import { levelInfoFromCommitCount, questNumber } from "../../../../../../features/rpg/calculations";
-import { toFriendlyErrorMessage } from "../../../../../../lib/error-messages";
 
 type RepoDetailSearch = { page: number };
 
@@ -91,24 +91,21 @@ function RepositoryDetailPage() {
   );
 }
 
-/**
- * Retry after a loader error: reset the cached queries so they're
- * refetched (not just re-read as an errored cache entry), then re-run the
- * route's loader via `router.invalidate()`.
- */
 function RepositoryDetailErrorComponent({ error }: { error: unknown }) {
-  const router = useRouter();
   const { username, owner, repo } = Route.useParams();
   const { page } = Route.useSearch();
   const { queryClient } = Route.useRouteContext();
 
-  function handleRetry() {
-    void queryClient.resetQueries({ queryKey: repositoryQueryOptions(owner, repo, username).queryKey });
-    void queryClient.resetQueries({ queryKey: commitsQueryOptions(owner, repo, username, page).queryKey });
-    void router.invalidate();
-  }
-
-  return <ErrorPanel message={toFriendlyErrorMessage(error)} onRetry={handleRetry} />;
+  return (
+    <RouteErrorPanel
+      error={error}
+      queryClient={queryClient}
+      queryKeys={[
+        repositoryQueryOptions(owner, repo, username).queryKey,
+        commitsQueryOptions(owner, repo, username, page).queryKey,
+      ]}
+    />
+  );
 }
 
 export const Route = createFileRoute("/users/$username/repos/$owner/$repo/")({
