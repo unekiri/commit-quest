@@ -50,7 +50,7 @@ function RepositoryDetailPage() {
           <span className="text-xs text-rpg-text-muted">{xp} XP（{repoData.commitCount} commits × 10）</span>
         </div>
         <XpBar xpInLevel={xpInLevel} progress={progress} className="mt-2 max-w-sm" />
-        <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex justify-start">
           <Link
             to="/users/$username"
             params={{ username }}
