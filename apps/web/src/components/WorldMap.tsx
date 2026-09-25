@@ -45,8 +45,6 @@ function MapNode({
   disabled: boolean;
   onSelect: () => void;
 }) {
-  const updated = new Date(repo.updatedAt).toLocaleDateString("ja-JP");
-
   return (
     <button
       type="button"
@@ -58,7 +56,6 @@ function MapNode({
     >
       <span className="w-full truncate text-xs font-bold text-rpg-text">{repo.name}</span>
       {repo.language ? <span className="text-[10px] text-rpg-text-muted">{repo.language}</span> : null}
-      <span className="text-[10px] text-rpg-text-muted">{updated}</span>
     </button>
   );
 }
