@@ -50,15 +50,6 @@ function RepositoryDetailPage() {
           <span className="text-xs text-rpg-text-muted">{xp} XP（{repoData.commitCount} commits × 10）</span>
         </div>
         <XpBar xpInLevel={xpInLevel} progress={progress} className="mt-2 max-w-sm" />
-        <div className="mt-3 flex justify-start">
-          <Link
-            to="/users/$username"
-            params={{ username }}
-            className="motion-safe:transition-transform inline-block cursor-pointer border-2 border-rpg-border bg-rpg-bg px-4 py-2 text-sm font-bold tracking-wide text-rpg-text motion-safe:hover:-translate-y-0.5 hover:bg-rpg-panel"
-          >
-            ← 戻る
-          </Link>
-        </div>
       </RpgPanel>
 
       <div>
@@ -93,6 +84,10 @@ function RepositoryDetailPage() {
           </RpgButton>
         </div>
       </div>
+
+      <Link to="/users/$username" params={{ username }} className="self-start text-sm text-rpg-gold underline">
+        ← HOMEへ戻る
+      </Link>
     </div>
   );
 }
