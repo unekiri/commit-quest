@@ -132,7 +132,7 @@ Repository一覧取得時、以前は各RepositoryのCommit数を`per_page=1`の
 変更後: GET /users/:username/repos → 1 request固定
 ```
 
-`RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World Mapの表示は名前・Languageのみに簡素化し、Repository DetailでCommit数から算出する「Quest XP」「Level」を新たに表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標である旨を明記）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止した。
+`RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World Mapの表示は名前・Descriptionのみに簡素化し、Repository DetailでCommit数から算出する「Quest XP」「Level」を新たに表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標である旨を明記）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止した。
 
 ### State責務の分離（World Mapのインタラクション強化）
 

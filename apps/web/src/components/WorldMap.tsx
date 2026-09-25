@@ -55,7 +55,11 @@ function MapNode({
       className="motion-safe:transition-transform flex h-full w-full cursor-pointer flex-col items-center justify-center gap-1 border-2 border-rpg-border bg-rpg-panel p-2 text-center motion-safe:hover:-translate-y-1 hover:border-rpg-gold disabled:cursor-not-allowed disabled:opacity-60 aria-pressed:border-rpg-gold"
     >
       <span className="w-full truncate text-xs font-bold text-rpg-text">{repo.name}</span>
-      {repo.language ? <span className="text-[10px] text-rpg-text-muted">{repo.language}</span> : null}
+      {repo.description ? (
+        <span className="line-clamp-2 w-full text-[10px] text-rpg-text-muted" title={repo.description}>
+          {repo.description}
+        </span>
+      ) : null}
     </button>
   );
 }
