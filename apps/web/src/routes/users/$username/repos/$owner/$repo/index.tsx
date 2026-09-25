@@ -50,9 +50,6 @@ function RepositoryDetailPage() {
           <span className="text-xs text-rpg-text-muted">{xp} XP（{repoData.commitCount} commits × 10）</span>
         </div>
         <XpBar xpInLevel={xpInLevel} progress={progress} className="mt-2 max-w-sm" />
-        <p className="mt-1 text-[11px] text-rpg-text-muted">
-          ※ Quest XP / LevelはGitHubの正式な値ではなく、Commit Quest独自のゲーム指標です。
-        </p>
       </RpgPanel>
 
       <div>
