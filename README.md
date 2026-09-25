@@ -48,7 +48,7 @@ commit-quest/
 本番では `apps/web` のビルド成果物（`apps/web/dist`）を、`apps/api` の同一Workerが **Static Assets** としてそのまま配信します。
 
 - `apps/api/wrangler.jsonc` の `assets.directory` が `../web/dist` を指す
-- `assets.not_found_handling: "single-page-application"` により、`/users/octocat/world` のような深いURLへの直アクセス・リロードでも `index.html` が返り、TanStack Router側でルーティングされる（SPA fallback）
+- `assets.not_found_handling: "single-page-application"` により、`/users/octocat` のような深いURLへの直アクセス・リロードでも `index.html` が返り、TanStack Router側でルーティングされる（SPA fallback）
 - `assets.run_worker_first: ["/api/*"]` により、`/api/*` 配下のリクエストのみ先にWorker（Hono）が処理し、それ以外は静的アセット配信が優先される
 - つまり **WebとAPIは同一オリジン・同一Workerとしてデプロイされ**、Web側は相対パス `/api/...` でバックエンドへアクセスする（CORS設定が不要）
 
@@ -106,7 +106,7 @@ GitHub Tokenは`apps/api`（サーバー側）にのみ保持され、Web（ブ�
 
 実装したもの:
 
-- GitHub username入力 → Player Dashboard / World Map / Repository Detail / Commit Detail
+- GitHub username入力 → Player Dashboard（World Map表示を含む） / Repository Detail / Commit Detail
 - RPGメタファー（Level / XP / Quest / QUEST CLEAR!）
 - Loading（Loading Quest...） / Error（QUEST FAILED） / Empty（NO QUESTS FOUND）状態
 - GitHub TokenをAPI側にのみ保持
@@ -132,11 +132,11 @@ Repository一覧取得時、以前は各RepositoryのCommit数を`per_page=1`の
 変更後: GET /users/:username/repos → 1 request固定
 ```
 
-`RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World MapとRepositoryCardの表示は名前・Language・最終更新日のみに簡素化し、Repository DetailでCommit数から算出する「Quest XP」「Level」を新たに表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標である旨を明記）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止し、追加のAPI呼び出しなしで得られるGitHub実データ（Public Repositories / Active Repository / Last Updated）を表示する「GitHub Stats」パネルに置き換えた。
+`RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World Mapの表示は名前・Language・最終更新日のみに簡素化し、Repository DetailでCommit数から算出する「Quest XP」「Level」を新たに表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標である旨を明記）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止し、追加のAPI呼び出しなしで得られるGitHub実データ（Public Repositories / Active Repository / Last Updated）を表示する「GitHub Stats」パネルに置き換えた。
 
 ### State責務の分離（World Mapのインタラクション強化）
 
-World MapのRepositoryノードはクリックしても即座に遷移せず、以下の流れにした。
+DashboardのRepositories欄にWorld Map（HOMEを中心としたRPG風マップ表示）を組み込んでおり、当初はDashboardと別タブの独立画面だったが、Dashboard 1画面に統合した。World MapのRepositoryノードはクリックしても即座に遷移せず、以下の流れにした。
 
 ```text
 ノード選択 → キャラクター(🧙)がHOMEから対象ノードへCSS transitionで移動 → 到着 → Command Window表示 → 「冒険する」でRepository Detailへ遷移
@@ -158,7 +158,7 @@ Commit Detailルートも同方式に統一し、`loader`から`commitDetailQuer
 
 ## Future Work
 
-- Repository一覧・World Mapの複数ページ対応（現状は取得可能な最初の1ページのみで表示）
+- Dashboard（World Map）の複数ページ対応（現状は取得可能な最初の1ページのみで表示）
 - GitHub OAuthによるログインとprivate repositoryの閲覧
 - Commit差分（diff）の表示
 - E2Eテストの追加（現状はPlaywright MCPによる手動確認のみ）

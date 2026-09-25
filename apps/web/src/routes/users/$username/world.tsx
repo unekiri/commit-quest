@@ -1,30 +1,10 @@
-import { EmptyState, ErrorPanel, LoadingPanel } from "@commit-quest/ui";
-import { createFileRoute } from "@tanstack/react-router";
-import { WorldMap } from "../../../components/WorldMap";
-import { useGitHubRepositories } from "../../../features/github/hooks";
-import { toFriendlyErrorMessage } from "../../../lib/error-messages";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-function WorldMapPage() {
-  const { username } = Route.useParams();
-  const reposQuery = useGitHubRepositories(username);
-
-  if (reposQuery.isPending) {
-    return <LoadingPanel />;
-  }
-
-  if (reposQuery.isError) {
-    return <ErrorPanel message={toFriendlyErrorMessage(reposQuery.error)} onRetry={() => void reposQuery.refetch()} />;
-  }
-
-  const repos = reposQuery.data.items;
-
-  if (repos.length === 0) {
-    return <EmptyState />;
-  }
-
-  return <WorldMap username={username} repos={repos} />;
-}
-
+// Dashboard and World Map were merged into a single screen at
+// `/users/$username`. This route is kept (rather than removed) so existing
+// links/bookmarks to `/users/$username/world` still resolve.
 export const Route = createFileRoute("/users/$username/world")({
-  component: WorldMapPage,
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/users/$username", params, replace: true });
+  },
 });

@@ -1,6 +1,6 @@
 import { EmptyState, ErrorPanel, LoadingPanel } from "@commit-quest/ui";
 import { createFileRoute } from "@tanstack/react-router";
-import { RepositoryCard } from "../../../components/RepositoryCard";
+import { WorldMap } from "../../../components/WorldMap";
 import { GitHubStatsPanel } from "../../../components/GitHubStatsPanel";
 import { PlayerStatus } from "../../../components/PlayerStatus";
 import { useGitHubRepositories, useGitHubUser } from "../../../features/github/hooks";
@@ -32,15 +32,7 @@ function DashboardPage() {
       <GitHubStatsPanel user={userQuery.data} activeRepository={activeRepository} />
       <div>
         <h3 className="mb-2 text-sm font-bold text-rpg-gold">Repositories</h3>
-        {repos.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {repos.map((repo) => (
-              <RepositoryCard key={repo.owner + repo.name} username={username} repo={repo} />
-            ))}
-          </div>
-        )}
+        {repos.length === 0 ? <EmptyState /> : <WorldMap username={username} repos={repos} />}
       </div>
     </div>
   );
