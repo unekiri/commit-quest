@@ -45,7 +45,6 @@ export function GitHubStatsPanel({ user, activeRepository }: GitHubStatsPanelPro
           <dd className="text-right font-bold text-rpg-text">{lastUpdated ?? "-"}</dd>
         </div>
       </dl>
-      <p className="mt-3 text-[11px] text-rpg-text-muted">※ GitHubの実データです（追加のAPI呼び出しはありません）。</p>
     </RpgPanel>
   );
 }
