@@ -1,6 +1,6 @@
 import { EmptyState, LevelBadge, LoadingPanel, RpgButton, RpgPanel, XpBar } from "@commit-quest/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { CommitQuestCard } from "../../../../../../components/CommitQuestCard";
 import { RouteErrorPanel } from "../../../../../../components/RouteErrorPanel";
 import { COMMITS_PAGE_SIZE, commitsQueryOptions, repositoryQueryOptions } from "../../../../../../features/github/queries";
@@ -50,6 +50,15 @@ function RepositoryDetailPage() {
           <span className="text-xs text-rpg-text-muted">{xp} XP（{repoData.commitCount} commits × 10）</span>
         </div>
         <XpBar xpInLevel={xpInLevel} progress={progress} className="mt-2 max-w-sm" />
+        <div className="mt-3 flex justify-end">
+          <Link
+            to="/users/$username"
+            params={{ username }}
+            className="motion-safe:transition-transform inline-block cursor-pointer border-2 border-rpg-border bg-rpg-bg px-4 py-2 text-sm font-bold tracking-wide text-rpg-text motion-safe:hover:-translate-y-0.5 hover:bg-rpg-panel"
+          >
+            ← 戻る
+          </Link>
+        </div>
       </RpgPanel>
 
       <div>
