@@ -4,13 +4,11 @@ import { levelInfoFromCommitCount } from "../features/rpg/calculations";
 
 export type PartyMemberRowProps = {
   contributor: ContributorDto;
-  totalContributions: number;
 };
 
 /** One party member row: RPG-style contributor display for Repository Detail's "Party". */
-export function PartyMemberRow({ contributor, totalContributions }: PartyMemberRowProps) {
-  const { level, xpInLevel, progress } = levelInfoFromCommitCount(contributor.contributions);
-  const share = totalContributions > 0 ? Math.round((contributor.contributions / totalContributions) * 100) : 0;
+export function PartyMemberRow({ contributor }: PartyMemberRowProps) {
+  const { level, xp, xpInLevel, progress } = levelInfoFromCommitCount(contributor.contributions);
 
   return (
     <div
@@ -24,11 +22,12 @@ export function PartyMemberRow({ contributor, totalContributions }: PartyMemberR
         className="h-10 w-10 shrink-0 rounded-full border-2 border-rpg-border"
       />
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-bold text-rpg-text">{contributor.login}</span>
+        <span className="text-sm font-bold text-rpg-text">{contributor.login}</span>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-rpg-gold">Quest XP</span>
           <LevelBadge level={level} />
           <span className="text-xs text-rpg-text-muted">
-            {contributor.contributions} commits（{share}%）
+            {xp} XP（{contributor.contributions} commits × 10）
           </span>
         </div>
         <XpBar xpInLevel={xpInLevel} progress={progress} className="mt-1 max-w-sm" />

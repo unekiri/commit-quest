@@ -132,9 +132,9 @@ Repository一覧取得時、以前は各RepositoryのCommit数を`per_page=1`の
 変更後: GET /users/:username/repos → 1 request固定
 ```
 
-`RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World Mapの表示は名前・Descriptionのみに簡素化し、Repository DetailでCommit数から算出する「Quest XP」「Level」を新たに表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標である旨を明記）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止した。
+`RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World Mapの表示は名前・Descriptionのみに簡素化し、Repository Detailではメンバーごとのコミット数から算出する「Quest XP」「Level」を表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止した。
 
-その後、Player DashboardのPlayer Statusに「全リポジトリ合計のQuest XP」を追加した。ここでもRepository数分の問い合わせ（N+1）にはせず、GitHub Search API（`GET /search/commits?q=author:{username}+user:{username}`）を1回呼び、レスポンスの`total_count`をそのまま合計コミット数として使っている（`user:`修飾子でそのユーザーが所有するリポジトリに限定し、`author:`でそのユーザーがauthorのコミットのみに絞る。GitHubの検索仕様上、対象は各リポジトリのデフォルトブランチのみでforkは含まれない）。またRepository Detailには「Party」としてメンバー別の貢献度（`GET /repos/{owner}/{repo}/contributors`を1回呼び出し）を追加し、誰がどれだけコミットしているかをXP/Levelで可視化している。
+その後、Player DashboardのPlayer Statusに「全リポジトリ合計のQuest XP」を追加した。ここでもRepository数分の問い合わせ（N+1）にはせず、GitHub Search API（`GET /search/commits?q=author:{username}+user:{username}`）を1回呼び、レスポンスの`total_count`をそのまま合計コミット数として使っている（`user:`修飾子でそのユーザーが所有するリポジトリに限定し、`author:`でそのユーザーがauthorのコミットのみに絞る。GitHubの検索仕様上、対象は各リポジトリのデフォルトブランチのみ。forkは含まれない想定だが、コミット検索での扱いは公式ドキュメントで明記を確認できていない）。またRepository Detailには「Party」としてメンバー別の貢献度（`GET /repos/{owner}/{repo}/contributors`を1回呼び出し）を追加し、誰がどれだけコミットしているかをメンバーごとのQuest XP/Levelで可視化している。人の貢献に揃えるため、BotとAIエージェント（claude / copilot等）のアカウントは除外している。
 
 ### State責務の分離（World Mapのインタラクション強化）
 

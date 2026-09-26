@@ -1,4 +1,4 @@
-import { EmptyState, LevelBadge, LoadingPanel, RpgButton, RpgPanel, XpBar } from "@commit-quest/ui";
+import { EmptyState, LoadingPanel, RpgButton, RpgPanel } from "@commit-quest/ui";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CommitQuestCard } from "../../../../../../components/CommitQuestCard";
@@ -10,7 +10,7 @@ import {
   contributorsQueryOptions,
   repositoryQueryOptions,
 } from "../../../../../../features/github/queries";
-import { levelInfoFromCommitCount, questNumber } from "../../../../../../features/rpg/calculations";
+import { questNumber } from "../../../../../../features/rpg/calculations";
 
 type RepoDetailSearch = { page: number };
 
@@ -34,8 +34,6 @@ function RepositoryDetailPage() {
   const repoData = repoQuery.data;
   const commits = commitsQuery.data.items;
   const contributors = [...contributorsQuery.data.items].sort((a, b) => b.contributions - a.contributions);
-  const totalContributions = contributors.reduce((sum, c) => sum + c.contributions, 0);
-  const { level, xp, xpInLevel, progress } = levelInfoFromCommitCount(repoData.commitCount);
 
   function goToPage(nextPage: number) {
     void navigate({ search: { page: nextPage } });
@@ -53,22 +51,11 @@ function RepositoryDetailPage() {
           ) : (
             <div className="flex flex-col gap-2">
               {contributors.map((contributor) => (
-                <PartyMemberRow
-                  key={contributor.login}
-                  contributor={contributor}
-                  totalContributions={totalContributions}
-                />
+                <PartyMemberRow key={contributor.login} contributor={contributor} />
               ))}
             </div>
           )}
         </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-rpg-gold">Quest XP</span>
-          <LevelBadge level={level} />
-          <span className="text-xs text-rpg-text-muted">{xp} XP（{repoData.commitCount} commits × 10）</span>
-        </div>
-        <XpBar xpInLevel={xpInLevel} progress={progress} className="mt-2 max-w-sm" />
       </RpgPanel>
 
       <div>
