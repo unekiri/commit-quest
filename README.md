@@ -134,6 +134,8 @@ Repository一覧取得時、以前は各RepositoryのCommit数を`per_page=1`の
 
 `RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World Mapの表示は名前・Descriptionのみに簡素化し、Repository DetailでCommit数から算出する「Quest XP」「Level」を新たに表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標である旨を明記）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止した。
 
+その後、Player DashboardのPlayer Statusに「全リポジトリ合計のQuest XP」を追加した。ここでもRepository数分の問い合わせ（N+1）にはせず、GitHub Search API（`GET /search/commits?q=author:{username}+user:{username}`）を1回呼び、レスポンスの`total_count`をそのまま合計コミット数として使っている（`user:`修飾子でそのユーザーが所有するリポジトリに限定し、`author:`でそのユーザーがauthorのコミットのみに絞る。GitHubの検索仕様上、対象は各リポジトリのデフォルトブランチのみでforkは含まれない）。またRepository Detailには「Party」としてメンバー別の貢献度（`GET /repos/{owner}/{repo}/contributors`を1回呼び出し）を追加し、誰がどれだけコミットしているかをXP/Levelで可視化している。
+
 ### State責務の分離（World Mapのインタラクション強化）
 
 DashboardのRepositories欄にWorld Map（HOMEを中心としたRPG風マップ表示）を組み込んでおり、当初はDashboardと別タブの独立画面だったが、Dashboard 1画面に統合した。World MapのRepositoryノードはクリックしても即座に遷移せず、以下の流れにした。
@@ -158,13 +160,26 @@ Repository Detailルートで、`createRootRouteWithContext`によりRouter cont
 
 Commit Detailルートも同方式に統一し、`loader`から`commitDetailQueryOptions`を`ensureQueryData`する形にした。Repository DetailとCommit Detailで共通の`errorComponent`ロジック（キャッシュのreset + `router.invalidate()`）は`RouteErrorPanel`に切り出して両ルートで再利用している。また、World MapでCommand Windowが開いた時点（`selectedRepository`確定時）に`router.preloadRoute`でRepository Detailのルートloaderを先読みし、「冒険する」選択時の体感待ち時間を減らしている。
 
+## 想定しているプロダクト像（本MVPの先）
+
+募集要項の「エンジニアチームの状態をRPG風に可視化するチーム分析プロダクト」を踏まえると、本来は**GitHub Organization単位**でチームの活動を可視化するプロダクトを想定している。
+
+- HOME: Organizationの全リポジトリを合計した、**メンバー別**のPlayer Status（パーティー編成のような一覧）
+- World Map: Organization配下のリポジトリ一覧
+- Repository Detail: 現状と同じく、リポジトリ単位のメンバー別貢献度
+
+想定するAPIは`GET /orgs/{org}/repos`でリポジトリ一覧を取得し、各リポジトリの`GET /repos/{owner}/{repo}/contributors`（期間を区切るなら`GET /repos/{owner}/{repo}/stats/contributors`）でメンバー別貢献度を集計する形になる。ただしOrganization全体の集計はリポジトリ数分の呼び出しが必要になり、この構成のままではN+1になってしまうため、集計結果はCloudflare Cache（KVまたはCache API）にキャッシュし、一定時間はGitHubへ再問い合わせしない設計にしたい。
+
+本MVPでは対象をuser（個人）に絞り、その中でも「HOMEでの合計」「Repository単位でのメンバー貢献度」という同じ構造を先に作った。今回追加したユーザー単位の集計（`/users/:username/stats`）とリポジトリのcontributors（`/repos/:owner/:repo/contributors`）は、対象をuserからorgに差し替えるだけで拡張できる形を意識している。
+
 ## Future Work
 
 - Dashboard（World Map）の複数ページ対応（現状は取得可能な最初の1ページのみで表示）
 - GitHub OAuthによるログインとprivate repositoryの閲覧
 - Commit差分（diff）の表示
 - E2Eテストの追加（現状はPlaywright MCPによる手動確認のみ）
-- Cloudflare Cacheの導入（`docs/improvement-proposal.md` Priority 5）
+- Cloudflare Cacheの導入（`docs/improvement-proposal.md` Priority 5、Organization単位の集計キャッシュにも同じ仕組みを使う想定）
+- GitHub Organization単位でのチーム分析（メンバー別Player Status、リポジトリ別貢献度）への拡張
 
 ## 既知の制約
 
