@@ -23,9 +23,7 @@ function HomePage() {
   return (
     <div className="mx-auto max-w-xl">
       <RpgPanel title="Commit Quest">
-        <p className="text-sm text-rpg-text-muted">
-          GitHub上の開発活動を冒険に見立てて可視化します。Repositoryはエリア、Commitはクエストとして表示されます。
-        </p>
+        <p className="text-sm text-rpg-text-muted">GitHub上の開発活動を冒険に見立てて可視化します。</p>
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
           <label htmlFor="username" className="text-xs font-bold text-rpg-gold">
             GitHub Username
