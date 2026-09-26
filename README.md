@@ -2,11 +2,46 @@
 
 GitHubのコミット情報を取得し、RPG風のUIで可視化するMVPです。
 
-Repositoryを「エリア」、Commitを「クエスト」に見立て、GitHub上の開発活動を冒険として表示します。
+## 全体構成
+
+```mermaid
+flowchart LR
+    subgraph browser["ブラウザ"]
+        page["ページ読み込み・リロード"]
+        spa["実行中のReact SPA<br/>TanStack Router / Query"]
+        cache[("TanStack Query cache")]
+    end
+    subgraph cf["Cloudflare（同一オリジン）"]
+        assets["Static Assets<br/>apps/web/dist / SPA fallback"]
+        api["Worker: Hono API<br/>apps/api"]
+        secret["GITHUB_TOKEN<br/>Worker secret（任意）"]
+    end
+    github[("GitHub REST API")]
+
+    page -->|"画面URL・静的ファイルを要求"| assets
+    assets -->|"HTML / JS / CSS"| spa
+    spa -->|"/api/*"| api
+    api -->|"DTO（JSON）"| spa
+    spa <-.->|キャッシュ| cache
+    secret -.-> api
+    api -->|"HTTPS（トークン設定時はBearer認証）"| github
+```
+
+- ブラウザのリクエストは同一オリジンで受け付ける。`/api/*` は Worker の Hono が処理し、画面URLや静的ファイルは Static Assets が配信する。画面URLに対応するファイルがない場合は SPA fallback で `index.html` を返す（`run_worker_first: ["/api/*"]`）。
+- GitHub REST API へのアクセスは Worker 経由で行う。設定した GitHub Token は Worker secret としてサーバー側にのみ保持する。
+- API は GitHub の生レスポンスを DTO に変換して返すため、UI は GitHub のレスポンス形式を知らない。`packages/types` は Web と API がビルド時に参照する共通型であり、実行時の通信先ではない。
+- 取得したデータは TanStack Query がブラウザ側でキャッシュし、Repository Detail / Commit Detail では Router の loader から事前取得する。
+
+| 画面 | Route | 呼び出す API（Worker） | GitHub REST API |
+| --- | --- | --- | --- |
+| Home | `/` | なし | なし |
+| Player Dashboard（World Map） | `/users/$username` | `/api/github/users/:username`<br/>`/api/github/users/:username/repos`<br/>`/api/github/users/:username/stats` | `GET /users/{username}`<br/>`GET /users/{username}/repos`<br/>`GET /search/commits` |
+| Repository Detail | `/users/$username/repos/$owner/$repo` | `/api/github/repos/:owner/:repo`<br/>`/api/github/repos/:owner/:repo/commits`<br/>`/api/github/repos/:owner/:repo/contributors` | `GET /repos/{owner}/{repo}`<br/>`GET /repos/{owner}/{repo}/commits?per_page=1&author={username}`（コミット数）<br/>`GET /repos/{owner}/{repo}/commits`（一覧）<br/>`GET /repos/{owner}/{repo}/contributors` |
+| Commit Detail | `/users/$username/repos/$owner/$repo/commits/$sha` | `/api/github/repos/:owner/:repo/commits/:sha` | `GET /repos/{owner}/{repo}/commits/{sha}` |
 
 ## なぜこの技術構成にしたか
 
-React 19 / TypeScript / Vite 6 / TanStack Router / TanStack Query / Tailwind CSS 4 / Turborepo / pnpm / GitHub REST API という技術スタックを、小規模でも一通り動くアプリケーションとして実際に使い、以下を経験・説明できる状態にすることを目的としています。
+React 19 / TypeScript / Vite 6 / TanStack Router / TanStack Query / Tailwind CSS 4 / Hono / Cloudflare Workers / Turborepo / pnpm / GitHub REST API という技術スタックを、小規模でも一通り動くアプリケーションとして実際に使い、以下を経験・説明できる状態にするため。
 
 - APIから取得したServer StateをTanStack Queryで管理した経験
 - SPAのルーティングをTanStack Routerで型安全に構築した経験
@@ -54,6 +89,8 @@ commit-quest/
 
 ## Setup
 
+Node.js 22以上が必要です。pnpmのバージョンはルートの`package.json`で固定しています。
+
 ```bash
 corepack enable
 pnpm install
@@ -89,22 +126,7 @@ GitHub Tokenは`apps/api`（サーバー側）にのみ保持され、Web（ブ�
 
 ビルド後は同一Workerから配信されるため、`VITE_API_BASE_URL` のような環境変数は不要です（`/api` への相対パスでアクセスします）。
 
-## 技術スタックと各ライブラリの利用理由
-
-| ライブラリ                | 利用理由                                                             |
-| -------------------------- | ---------------------------------------------------------------------- |
-| React 19                   | UIライブラリ                                                           |
-| TypeScript                 | 型安全性の確保                                                         |
-| Vite 6                     | 高速な開発サーバー・ビルド                                             |
-| TanStack Router            | 型安全なfile-based routing、URL stateの管理                            |
-| TanStack Query             | Server Stateの取得・キャッシュ・エラー/ローディング管理                |
-| Tailwind CSS 4              | CSS-first configurationによる高速なRPG風UI構築                         |
-| Hono                       | Cloudflare Workers上で動く軽量HTTPフレームワーク（API側）              |
-| Turborepo / pnpm workspace | Web/API/共通型のmonorepo管理、build/lint/typecheckタスクのオーケストレーション |
-
 ## MVP Scope
-
-実装したもの:
 
 - GitHub username入力 → Player Dashboard（World Map表示を含む） / Repository Detail / Commit Detail
 - RPGメタファー（Level / XP / Quest / QUEST CLEAR!）
@@ -112,53 +134,14 @@ GitHub Tokenは`apps/api`（サーバー側）にのみ保持され、Web（ブ�
 - GitHub TokenをAPI側にのみ保持
 - TanStack QueryによるServer State管理とキャッシュ
 
-実装しなかったもの（詳細は `docs/design.md` §3.2）:
+## 現在の実装で工夫した点
 
-- GitHub OAuthログイン、DBへの永続化、複数ユーザー管理、LLM連携
-- 本格的なゲームロジック、Canvas/WebGL、リアルタイム通信
-- Repositoryへの書き込み、GitHub webhook、管理画面、課金
-- 高度なアクセシビリティ最適化、本番レベルのセキュリティ監査
+- Repository一覧はGitHubへ1回だけ問い合わせる。コミット数はRepository Detailを開いたときに取得し、一覧取得時のN+1リクエストを避ける。
+- DashboardのQuest XPは、GitHub Search APIで取得した対象ユーザーのコミット検索結果数を基に計算する。Repository DetailのPartyはcontributors APIから取得し、Botと既知のAIエージェントのアカウントを除外する。Quest XPとLevelはCommit Quest独自の指標である。
+- World MapはDashboardに統合した。ノード選択後にキャラクターが移動し、Command Windowの「冒険する」からRepository Detailへ進む。GitHubデータはTanStack Query、URLはTanStack Router、キャラクター位置などの画面内状態はReact Stateで管理する。戻る操作では訪問先の位置をContextから復元し、リロード時はHOMEへ戻る。
+- Repository DetailのloaderはRepository情報・Commit一覧・contributorsを並行取得し、Commit Detailのloaderは対象Commitを取得する。両画面はQuery Cacheを利用し、World MapのCommand Window表示時にはRepository Detailを先読みする。
 
-## 改善内容（面接前の改善対応）
-
-MVP完成後、実際に動作確認した際に見つかった課題を`docs/improvement-proposal.md`に整理し、以下を実施した。
-
-### GitHub APIのN+1リクエスト解消
-
-Repository一覧取得時、以前は各RepositoryのCommit数を`per_page=1`のCommit取得で個別に問い合わせており、Repositoryが30件あれば最大31リクエスト（一覧1回 + Commit数取得30回）が発生し、GitHubのRate Limitに到達することがあった。
-
-```text
-変更前: GET /users/:username/repos → 1 + N requests（Nはrepo数、最大30）
-変更後: GET /users/:username/repos → 1 request固定
-```
-
-`RepositoryDto`からは`commitCount`を削除し、Repository Detail専用の`RepositoryDetailDto`（`RepositoryDto & { commitCount: number }`）を新設。Commit数の取得はRepository Detail画面を開いたタイミングのみに限定した（Lazy Loading）。これに伴い、World Mapの表示は名前・Descriptionのみに簡素化し、Repository Detailではメンバーごとのコミット数から算出する「Quest XP」「Level」を表示している（GitHubの正式な値ではなくCommit Quest独自のゲーム指標）。DashboardのTotal Commit / Player Level / XPは実態と合わない指標だったため廃止した。
-
-その後、Player DashboardのPlayer Statusに「全リポジトリ合計のQuest XP」を追加した。ここでもRepository数分の問い合わせ（N+1）にはせず、GitHub Search API（`GET /search/commits?q=author:{username}+user:{username}`）を1回呼び、レスポンスの`total_count`をそのまま合計コミット数として使っている（`user:`修飾子でそのユーザーが所有するリポジトリに限定し、`author:`でそのユーザーがauthorのコミットのみに絞る。GitHubの検索仕様上、対象は各リポジトリのデフォルトブランチのみ。forkは含まれない想定だが、コミット検索での扱いは公式ドキュメントで明記を確認できていない）。またRepository Detailには「Party」としてメンバー別の貢献度（`GET /repos/{owner}/{repo}/contributors`を1回呼び出し）を追加し、誰がどれだけコミットしているかをメンバーごとのQuest XP/Levelで可視化している。人の貢献に揃えるため、BotとAIエージェント（claude / copilot等）のアカウントは除外している。
-
-### State責務の分離（World Mapのインタラクション強化）
-
-DashboardのRepositories欄にWorld Map（HOMEを中心としたRPG風マップ表示）を組み込んでおり、当初はDashboardと別タブの独立画面だったが、Dashboard 1画面に統合した。World MapのRepositoryノードはクリックしても即座に遷移せず、以下の流れにした。
-
-```text
-ノード選択 → キャラクター(🧙)がHOMEから対象ノードへCSS transitionで移動 → 到着 → Command Window表示 → 「冒険する」でRepository Detailへ遷移
-```
-
-キャラクター位置・移動中フラグ・Command Windowの開閉といったClient StateはServer State（TanStack Query）やURL State（TanStack Router）と混在させず、`useWorldMapState`（`useReducer`）に分離して管理している。
-
-```text
-GitHub Data              → TanStack Query
-URL / Route（page等）     → TanStack Router
-キャラクター位置・Command Window → React State（useWorldMapState）
-```
-
-Repository Detailから「← World Mapへ戻る」（リンク／ブラウザBack）で戻った際は、直前に「冒険する」を選んだRepositoryノード上にキャラクターが立っている状態（Command Windowは閉）で表示する。このキャラクター位置はURLには載せず、`/users/$username`のレイアウトルート（`route.tsx`、子ルート間の遷移でもマウントされ続ける）に置いた`LastVisitedRepositoryContext`（React Context）で保持し、`useWorldMapState`の初期値として渡している。リロード時は初期状態（HOME）に戻る。
-
-### Router loaderとQuery Cacheの連携
-
-Repository Detailルートで、`createRootRouteWithContext`によりRouter contextへ`queryClient`を渡し、`loader`から`queryClient.ensureQueryData`でRepositoryとCommit一覧のデータを`Promise.all`で並行取得するようにした。コンポーネント側は`useSuspenseQuery`でそのキャッシュを読むだけになり、Loading/ErrorはRouteの`pendingComponent` / `errorComponent`に委譲している。Query Cacheが既にあれば再利用されるため、同じRepositoryへ再度遷移した際の待ち時間が減る。Routerの`defaultPreloadStaleTime`は`0`にし、鮮度判定はQuery側（`staleTime`）に一本化した。
-
-Commit Detailルートも同方式に統一し、`loader`から`commitDetailQueryOptions`を`ensureQueryData`する形にした。Repository DetailとCommit Detailで共通の`errorComponent`ロジック（キャッシュのreset + `router.invalidate()`）は`RouteErrorPanel`に切り出して両ルートで再利用している。また、World MapでCommand Windowが開いた時点（`selectedRepository`確定時）に`router.preloadRoute`でRepository Detailのルートloaderを先読みし、「冒険する」選択時の体感待ち時間を減らしている。
+改善前の課題と検討経緯は[改善提案書](docs/improvement-proposal.md)にまとめている。
 
 ## 想定しているプロダクト像（本MVPの先）
 
@@ -183,5 +166,6 @@ Commit Detailルートも同方式に統一し、`loader`から`commitDetailQuer
 
 ## 既知の制約
 
+- Repository DetailのPartyはcontributors APIの最初の30件のみ表示する。
 - `apps/web/src/routeTree.gen.ts` は TanStack Router の vite plugin（`@tanstack/router-plugin/vite`）が自動生成するファイルです。クローン直後でも typecheck が通るよう Git 管理に含めています。手で編集しないでください。
 - GitHub APIの認証なしレート制限（60 req/h）に達すると、画面には `QUEST FAILED` として日本語の案内メッセージが表示されます（GitHubの生エラー文はそのまま表示しません）。
