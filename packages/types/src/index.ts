@@ -101,7 +101,8 @@ export type ErrorCode =
   | "GITHUB_UNAUTHORIZED"
   | "GITHUB_ERROR"
   | "VALIDATION_ERROR"
-  | "INTERNAL_ERROR";
+  | "INTERNAL_ERROR"
+  | "TOO_MANY_REQUESTS";
 
 export type ErrorResponse = {
   error: {

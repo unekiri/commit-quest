@@ -140,6 +140,7 @@ GitHub Tokenは`apps/api`（サーバー側）にのみ保持され、Web（ブ�
 - DashboardのQuest XPは、GitHub Search APIで取得した対象ユーザーのコミット検索結果数を基に計算する。Repository DetailのPartyはcontributors APIから取得し、Botと既知のAIエージェントのアカウントを除外する。Quest XPとLevelはCommit Quest独自の指標である。
 - World MapはDashboardに統合した。ノード選択後にキャラクターが移動し、Command Windowの「冒険する」からRepository Detailへ進む。GitHubデータはTanStack Query、URLはTanStack Router、キャラクター位置などの画面内状態はReact Stateで管理する。戻る操作では訪問先の位置をContextから復元し、リロード時はHOMEへ戻る。
 - Repository DetailのloaderはRepository情報・Commit一覧・contributorsを並行取得し、Commit Detailのloaderは対象Commitを取得する。両画面はQuery Cacheを利用し、World MapのCommand Window表示時にはRepository Detailを先読みする。
+- `/api/*` はWorkers Rate Limiting binding（`API_RATE_LIMITER`）でクライアントIP単位60回/分に制限している。公開URLへの大量アクセスでWorkerが保持するGitHub Tokenの利用枠を消費されるのを防ぐ目的。Rate Limitingはロケーション単位の近似カウントであり、厳密なグローバル上限ではない点に注意（[Cloudflare公式ドキュメント](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/)）。
 
 改善前の課題と検討経緯は[改善提案書](docs/improvement-proposal.md)にまとめている。
 
