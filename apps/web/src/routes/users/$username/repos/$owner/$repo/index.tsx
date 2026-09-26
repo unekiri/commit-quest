@@ -2,8 +2,14 @@ import { EmptyState, LevelBadge, LoadingPanel, RpgButton, RpgPanel, XpBar } from
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CommitQuestCard } from "../../../../../../components/CommitQuestCard";
+import { PartyMemberRow } from "../../../../../../components/PartyMemberRow";
 import { RouteErrorPanel } from "../../../../../../components/RouteErrorPanel";
-import { COMMITS_PAGE_SIZE, commitsQueryOptions, repositoryQueryOptions } from "../../../../../../features/github/queries";
+import {
+  COMMITS_PAGE_SIZE,
+  commitsQueryOptions,
+  contributorsQueryOptions,
+  repositoryQueryOptions,
+} from "../../../../../../features/github/queries";
 import { levelInfoFromCommitCount, questNumber } from "../../../../../../features/rpg/calculations";
 
 type RepoDetailSearch = { page: number };
@@ -23,11 +29,13 @@ function RepositoryDetailPage() {
   // reads the cache: Suspense/pendingComponent already covered the wait.
   const repoQuery = useSuspenseQuery(repositoryQueryOptions(owner, repo, username));
   const commitsQuery = useSuspenseQuery(commitsQueryOptions(owner, repo, username, page));
+  const contributorsQuery = useSuspenseQuery(contributorsQueryOptions(owner, repo));
 
   const repoData = repoQuery.data;
   const commits = commitsQuery.data.items;
+  const contributors = [...contributorsQuery.data.items].sort((a, b) => b.contributions - a.contributions);
+  const totalContributions = contributors.reduce((sum, c) => sum + c.contributions, 0);
   const { level, xp, xpInLevel, progress } = levelInfoFromCommitCount(repoData.commitCount);
-  const updated = new Date(repoData.updatedAt).toLocaleString("ja-JP");
 
   function goToPage(nextPage: number) {
     void navigate({ search: { page: nextPage } });
@@ -36,13 +44,25 @@ function RepositoryDetailPage() {
   return (
     <div className="flex flex-col gap-4">
       <RpgPanel title={repoData.name}>
-        <div className="flex flex-wrap items-center gap-2">
-          {repoData.language ? <span className="text-xs text-rpg-text-muted">{repoData.language}</span> : null}
-          <span className="text-xs text-rpg-text-muted">★ {repoData.stars}</span>
-          <span className="text-xs text-rpg-text-muted">Forks {repoData.forks}</span>
-          <span className="text-xs text-rpg-text-muted">Updated {updated}</span>
+        {repoData.description ? <p className="text-sm text-rpg-text">{repoData.description}</p> : null}
+
+        <div className="mt-4">
+          <h3 className="mb-2 text-xs font-bold text-rpg-gold">Party</h3>
+          {contributors.length === 0 ? (
+            <EmptyState message="NO PARTY MEMBERS FOUND" />
+          ) : (
+            <div className="flex flex-col gap-2">
+              {contributors.map((contributor) => (
+                <PartyMemberRow
+                  key={contributor.login}
+                  contributor={contributor}
+                  totalContributions={totalContributions}
+                  isCurrentUser={contributor.login.toLowerCase() === username.toLowerCase()}
+                />
+              ))}
+            </div>
+          )}
         </div>
-        {repoData.description ? <p className="mt-2 text-sm text-rpg-text">{repoData.description}</p> : null}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-rpg-gold">Quest XP</span>
@@ -104,6 +124,7 @@ function RepositoryDetailErrorComponent({ error }: { error: unknown }) {
       queryKeys={[
         repositoryQueryOptions(owner, repo, username).queryKey,
         commitsQueryOptions(owner, repo, username, page).queryKey,
+        contributorsQueryOptions(owner, repo).queryKey,
       ]}
     />
   );
@@ -118,6 +139,7 @@ export const Route = createFileRoute("/users/$username/repos/$owner/$repo/")({
     await Promise.all([
       context.queryClient.ensureQueryData(repositoryQueryOptions(params.owner, params.repo, params.username)),
       context.queryClient.ensureQueryData(commitsQueryOptions(params.owner, params.repo, params.username, deps.page)),
+      context.queryClient.ensureQueryData(contributorsQueryOptions(params.owner, params.repo)),
     ]);
   },
   pendingComponent: LoadingPanel,

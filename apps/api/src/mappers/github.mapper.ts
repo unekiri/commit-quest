@@ -1,6 +1,7 @@
 import type {
   CommitDetailDto,
   CommitDto,
+  ContributorDto,
   GitHubUserDto,
   RepositoryDetailDto,
   RepositoryDto,
@@ -9,6 +10,7 @@ import type {
 import type {
   GitHubCommitApi,
   GitHubCommitDetailApi,
+  GitHubContributorApi,
   GitHubRepoApi,
   GitHubSearchCommitsApi,
   GitHubUserApi,
@@ -59,6 +61,15 @@ export function mapCommit(raw: GitHubCommitApi): CommitDto {
 export function mapUserStats(raw: GitHubSearchCommitsApi): UserStatsDto {
   return {
     totalCommits: raw.total_count,
+  };
+}
+
+export function mapContributor(raw: GitHubContributorApi): ContributorDto {
+  return {
+    login: raw.login,
+    avatarUrl: raw.avatar_url,
+    contributions: raw.contributions,
+    htmlUrl: raw.html_url,
   };
 }
 

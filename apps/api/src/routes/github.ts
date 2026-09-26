@@ -33,6 +33,13 @@ githubRoutes.get("/repos/:owner/:repo", async (c) => {
   return c.json(dto);
 });
 
+githubRoutes.get("/repos/:owner/:repo/contributors", async (c) => {
+  const owner = assertUsername(c.req.param("owner"), "owner");
+  const repo = assertRepo(c.req.param("repo"));
+  const dto = await githubService.getContributors(owner, repo, c.env);
+  return c.json(dto);
+});
+
 githubRoutes.get("/repos/:owner/:repo/commits", async (c) => {
   const owner = assertUsername(c.req.param("owner"), "owner");
   const repo = assertRepo(c.req.param("repo"));

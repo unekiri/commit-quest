@@ -84,6 +84,17 @@ export type UserStatsDto = {
   totalCommits: number;
 };
 
+export type ContributorDto = {
+  login: string;
+  avatarUrl: string;
+  contributions: number;
+  htmlUrl: string;
+};
+
+export type ContributorsResponse = {
+  items: ContributorDto[];
+};
+
 export type ErrorCode =
   | "GITHUB_NOT_FOUND"
   | "GITHUB_RATE_LIMIT"

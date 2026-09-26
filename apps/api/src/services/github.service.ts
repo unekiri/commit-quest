@@ -1,6 +1,7 @@
 import type {
   CommitDetailDto,
   CommitListResponse,
+  ContributorsResponse,
   RepositoryDetailDto,
   RepositoryListResponse,
   GitHubUserDto,
@@ -11,6 +12,7 @@ import { githubErrorFromResponse } from "../lib/errors";
 import {
   mapCommit,
   mapCommitDetail,
+  mapContributor,
   mapRepository,
   mapRepositoryDetail,
   mapUser,
@@ -19,6 +21,7 @@ import {
 import type {
   GitHubCommitApi,
   GitHubCommitDetailApi,
+  GitHubContributorApi,
   GitHubRepoApi,
   GitHubSearchCommitsApi,
   GitHubUserApi,
@@ -164,6 +167,25 @@ export async function getUserStats(username: string, env: Env): Promise<UserStat
   }
   const raw = await res.json<GitHubSearchCommitsApi>();
   return mapUserStats(raw);
+}
+
+/**
+ * Contributors for a repository, via a single GitHub API call (no paging
+ * beyond the first page, per_page=30). Bot accounts are excluded. Empty
+ * repositories return an empty list (204 has no body, 409 is GitHub's
+ * "repository is empty" conflict response).
+ */
+export async function getContributors(owner: string, repo: string, env: Env): Promise<ContributorsResponse> {
+  const res = await githubFetch(`/repos/${owner}/${repo}/contributors?per_page=30`, env);
+  if (res.status === 204 || res.status === 409) {
+    return { items: [] };
+  }
+  if (!res.ok) {
+    throw githubErrorFromResponse(res);
+  }
+  const raw = await res.json<GitHubContributorApi[]>();
+  const items = raw.filter((contributor) => contributor.type !== "Bot").map(mapContributor);
+  return { items };
 }
 
 export async function getCommitDetail(

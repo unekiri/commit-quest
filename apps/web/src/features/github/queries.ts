@@ -1,6 +1,7 @@
 import type {
   CommitDetailDto,
   CommitListResponse,
+  ContributorsResponse,
   GitHubUserDto,
   RepositoryDetailDto,
   RepositoryListResponse,
@@ -45,6 +46,16 @@ export function repositoryQueryOptions(owner: string, repo: string, author: stri
     queryFn: () =>
       apiClient.get<RepositoryDetailDto>(
         `/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}?author=${encodeURIComponent(author)}`,
+      ),
+  });
+}
+
+export function contributorsQueryOptions(owner: string, repo: string) {
+  return queryOptions({
+    queryKey: ["github", "contributors", owner, repo] as const,
+    queryFn: () =>
+      apiClient.get<ContributorsResponse>(
+        `/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contributors`,
       ),
   });
 }

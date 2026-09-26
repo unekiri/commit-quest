@@ -62,3 +62,11 @@ export type GitHubCommitDetailApi = GitHubCommitApi & {
 export type GitHubSearchCommitsApi = {
   total_count: number;
 };
+
+export type GitHubContributorApi = {
+  login: string;
+  avatar_url: string;
+  contributions: number;
+  html_url: string;
+  type: string;
+};
