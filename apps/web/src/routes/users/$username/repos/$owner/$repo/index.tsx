@@ -57,7 +57,6 @@ function RepositoryDetailPage() {
                   key={contributor.login}
                   contributor={contributor}
                   totalContributions={totalContributions}
-                  isCurrentUser={contributor.login.toLowerCase() === username.toLowerCase()}
                 />
               ))}
             </div>

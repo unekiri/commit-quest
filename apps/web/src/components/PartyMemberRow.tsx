@@ -5,19 +5,16 @@ import { levelInfoFromCommitCount } from "../features/rpg/calculations";
 export type PartyMemberRowProps = {
   contributor: ContributorDto;
   totalContributions: number;
-  isCurrentUser: boolean;
 };
 
 /** One party member row: RPG-style contributor display for Repository Detail's "Party". */
-export function PartyMemberRow({ contributor, totalContributions, isCurrentUser }: PartyMemberRowProps) {
+export function PartyMemberRow({ contributor, totalContributions }: PartyMemberRowProps) {
   const { level, xpInLevel, progress } = levelInfoFromCommitCount(contributor.contributions);
   const share = totalContributions > 0 ? Math.round((contributor.contributions / totalContributions) * 100) : 0;
 
   return (
     <div
-      className={`flex flex-wrap items-center gap-3 border-2 p-2 ${
-        isCurrentUser ? "border-rpg-gold bg-rpg-gold/10" : "border-rpg-border"
-      }`}
+      className="flex flex-wrap items-center gap-3 border-2 border-rpg-border p-2"
     >
       <img
         src={contributor.avatarUrl}

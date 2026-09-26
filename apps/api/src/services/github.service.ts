@@ -170,8 +170,16 @@ export async function getUserStats(username: string, env: Env): Promise<UserStat
 }
 
 /**
+ * GitHub accounts used by AI coding agents as commit authors. They are
+ * excluded from the party so contribution is shown per human, regardless of
+ * which agent (or none) a person used — agents that commit with the user's
+ * own git identity are already counted as that user.
+ */
+const AI_AGENT_LOGINS = new Set(["claude", "copilot", "copilot-swe-agent", "devin-ai-integration"]);
+
+/**
  * Contributors for a repository, via a single GitHub API call (no paging
- * beyond the first page, per_page=30). Bot accounts are excluded. Empty
+ * beyond the first page, per_page=30). Bot and AI agent accounts are excluded. Empty
  * repositories return an empty list (204 has no body, 409 is GitHub's
  * "repository is empty" conflict response).
  */
@@ -184,7 +192,9 @@ export async function getContributors(owner: string, repo: string, env: Env): Pr
     throw githubErrorFromResponse(res);
   }
   const raw = await res.json<GitHubContributorApi[]>();
-  const items = raw.filter((contributor) => contributor.type !== "Bot").map(mapContributor);
+  const items = raw
+    .filter((contributor) => contributor.type !== "Bot" && !AI_AGENT_LOGINS.has(contributor.login.toLowerCase()))
+    .map(mapContributor);
   return { items };
 }
 
