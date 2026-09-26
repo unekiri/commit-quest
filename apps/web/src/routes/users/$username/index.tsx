@@ -1,5 +1,5 @@
 import { EmptyState, ErrorPanel, LoadingPanel } from "@commit-quest/ui";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { WorldMap } from "../../../components/WorldMap";
 import { PlayerStatus } from "../../../components/PlayerStatus";
 import { useGitHubRepositories, useGitHubUser } from "../../../features/github/hooks";
@@ -31,6 +31,10 @@ function DashboardPage() {
         <h3 className="mb-2 text-sm font-bold text-rpg-gold">Repositories</h3>
         {repos.length === 0 ? <EmptyState /> : <WorldMap username={username} repos={repos} />}
       </div>
+
+      <Link to="/" className="self-start text-sm text-rpg-gold underline">
+        ← ユーザー名入力へ戻る
+      </Link>
     </div>
   );
 }
