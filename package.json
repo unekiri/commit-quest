@@ -10,7 +10,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "deploy": "turbo run build && pnpm --filter @commit-quest/api deploy"
+    "deploy": "turbo run build && pnpm --filter @commit-quest/api run deploy"
   },
   "devDependencies": {
     "eslint": "^10.11.0",

@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "build": "tsc --noEmit",
-    "typecheck": "tsc --noEmit",
+    "cf-typegen": "wrangler types",
+    "build": "wrangler types && tsc --noEmit",
+    "typecheck": "wrangler types && tsc --noEmit",
     "lint": "eslint .",
     "deploy": "wrangler deploy"
   },
