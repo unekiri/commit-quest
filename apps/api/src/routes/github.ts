@@ -10,6 +10,12 @@ githubRoutes.get("/users/:username", async (c) => {
   return c.json(dto);
 });
 
+githubRoutes.get("/users/:username/stats", async (c) => {
+  const username = assertUsername(c.req.param("username"));
+  const dto = await githubService.getUserStats(username, c.env);
+  return c.json(dto);
+});
+
 githubRoutes.get("/users/:username/repos", async (c) => {
   const username = assertUsername(c.req.param("username"));
   const page = parsePage(c.req.query("page"));

@@ -1,8 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { commitsQueryOptions, repositoryQueryOptions, reposQueryOptions, userQueryOptions } from "./queries";
+import { commitsQueryOptions, repositoryQueryOptions, reposQueryOptions, userQueryOptions, userStatsQueryOptions } from "./queries";
 
 export function useGitHubUser(username: string) {
   return useQuery(userQueryOptions(username));
+}
+
+export function useGitHubUserStats(username: string) {
+  return useQuery(userStatsQueryOptions(username));
 }
 
 export function useGitHubRepositories(username: string) {

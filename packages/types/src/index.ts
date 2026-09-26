@@ -73,6 +73,17 @@ export type PagedResponse<T> = {
 export type RepositoryListResponse = PagedResponse<RepositoryDto>;
 export type CommitListResponse = PagedResponse<CommitDto>;
 
+/**
+ * Aggregated stats for a GitHub user across all of their repositories.
+ * `totalCommits` comes from a single GitHub Search API call (commit search,
+ * `author:{username} user:{username}`) to avoid an N+1 request pattern.
+ * Per GitHub's search behavior, this only counts commits on each
+ * repository's default branch and excludes forks.
+ */
+export type UserStatsDto = {
+  totalCommits: number;
+};
+
 export type ErrorCode =
   | "GITHUB_NOT_FOUND"
   | "GITHUB_RATE_LIMIT"

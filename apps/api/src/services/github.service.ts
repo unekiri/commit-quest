@@ -4,14 +4,23 @@ import type {
   RepositoryDetailDto,
   RepositoryListResponse,
   GitHubUserDto,
+  UserStatsDto,
 } from "@commit-quest/types";
 import { githubFetch } from "../clients/github.client";
 import { githubErrorFromResponse } from "../lib/errors";
-import { mapCommit, mapCommitDetail, mapRepository, mapRepositoryDetail, mapUser } from "../mappers/github.mapper";
+import {
+  mapCommit,
+  mapCommitDetail,
+  mapRepository,
+  mapRepositoryDetail,
+  mapUser,
+  mapUserStats,
+} from "../mappers/github.mapper";
 import type {
   GitHubCommitApi,
   GitHubCommitDetailApi,
   GitHubRepoApi,
+  GitHubSearchCommitsApi,
   GitHubUserApi,
 } from "../types/github-api";
 
@@ -135,6 +144,26 @@ export async function getCommits(
     perPage,
     hasNextPage: hasNextPage(res.headers.get("link")),
   };
+}
+
+/**
+ * Total commits authored by `username` across repositories they own,
+ * via a single GitHub Search API call instead of summing per-repository
+ * commit counts (which would be an N+1 request pattern). Per GitHub's
+ * search behavior this only counts each repository's default branch and
+ * excludes forks.
+ */
+export async function getUserStats(username: string, env: Env): Promise<UserStatsDto> {
+  const params = new URLSearchParams({
+    q: `author:${username} user:${username}`,
+    per_page: "1",
+  });
+  const res = await githubFetch(`/search/commits?${params.toString()}`, env);
+  if (!res.ok) {
+    throw githubErrorFromResponse(res);
+  }
+  const raw = await res.json<GitHubSearchCommitsApi>();
+  return mapUserStats(raw);
 }
 
 export async function getCommitDetail(

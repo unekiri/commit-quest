@@ -4,6 +4,7 @@ import type {
   GitHubUserDto,
   RepositoryDetailDto,
   RepositoryListResponse,
+  UserStatsDto,
 } from "@commit-quest/types";
 import { queryOptions } from "@tanstack/react-query";
 import { apiClient } from "../../lib/api-client";
@@ -18,6 +19,13 @@ export function userQueryOptions(username: string) {
   return queryOptions({
     queryKey: ["github", "user", username] as const,
     queryFn: () => apiClient.get<GitHubUserDto>(`/github/users/${encodeURIComponent(username)}`),
+  });
+}
+
+export function userStatsQueryOptions(username: string) {
+  return queryOptions({
+    queryKey: ["github", "userStats", username] as const,
+    queryFn: () => apiClient.get<UserStatsDto>(`/github/users/${encodeURIComponent(username)}/stats`),
   });
 }
 

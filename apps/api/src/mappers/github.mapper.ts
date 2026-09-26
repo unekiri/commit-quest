@@ -4,11 +4,13 @@ import type {
   GitHubUserDto,
   RepositoryDetailDto,
   RepositoryDto,
+  UserStatsDto,
 } from "@commit-quest/types";
 import type {
   GitHubCommitApi,
   GitHubCommitDetailApi,
   GitHubRepoApi,
+  GitHubSearchCommitsApi,
   GitHubUserApi,
 } from "../types/github-api";
 
@@ -51,6 +53,12 @@ export function mapCommit(raw: GitHubCommitApi): CommitDto {
     authorLogin: raw.author?.login ?? null,
     committedAt: raw.commit.author?.date ?? "",
     htmlUrl: raw.html_url,
+  };
+}
+
+export function mapUserStats(raw: GitHubSearchCommitsApi): UserStatsDto {
+  return {
+    totalCommits: raw.total_count,
   };
 }
 

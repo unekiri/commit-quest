@@ -57,3 +57,8 @@ export type GitHubCommitDetailApi = GitHubCommitApi & {
   };
   files?: GitHubCommitFileApi[];
 };
+
+/** Response shape of `GET /search/commits` (subset actually used). */
+export type GitHubSearchCommitsApi = {
+  total_count: number;
+};
