@@ -2,8 +2,11 @@ import type { ErrorResponse } from "@commit-quest/types";
 import { Hono } from "hono";
 import { githubRoutes } from "./routes/github";
 import { AppError } from "./lib/errors";
+import { rateLimitMiddleware } from "./middlewares/rate-limit";
 
 export const app = new Hono<{ Bindings: Env }>();
+
+app.use("/api/*", rateLimitMiddleware);
 
 app.route("/api/github", githubRoutes);
 

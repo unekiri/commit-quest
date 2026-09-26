@@ -8,6 +8,7 @@ const MESSAGES: Record<ErrorCode, string> = {
   GITHUB_ERROR: "GitHubとの通信に失敗しました。時間をおいて再度お試しください。",
   VALIDATION_ERROR: "入力内容を確認してください。",
   INTERNAL_ERROR: "予期しないエラーが発生しました。",
+  TOO_MANY_REQUESTS: "アクセスが集中しています。1分ほど待ってから再度お試しください。",
 };
 
 /** Maps an unknown error to a friendly, Japanese, never-raw message for ErrorPanel. */
