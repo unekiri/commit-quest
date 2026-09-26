@@ -21,6 +21,25 @@ const initialState: WorldMapState = {
   moving: false,
 };
 
+/**
+ * Builds the initial state for a World Map mount. When an
+ * `initialPosition` (the Repository last visited via "冒険する", carried
+ * across route transitions by LastVisitedRepositoryContext) is given, the
+ * character starts already standing on that node with the Command Window
+ * closed and no movement animation. Otherwise it falls back to HOME.
+ */
+function makeInitialState(initialPosition?: string | null): WorldMapState {
+  if (!initialPosition) {
+    return initialState;
+  }
+  return {
+    selectedRepository: initialPosition,
+    playerPosition: initialPosition,
+    commandOpen: false,
+    moving: false,
+  };
+}
+
 type WorldMapAction =
   | { type: "SELECT_NODE"; repoKey: string }
   | { type: "ARRIVED" }
@@ -68,8 +87,8 @@ function reducer(state: WorldMapState, action: WorldMapAction): WorldMapState {
   }
 }
 
-export function useWorldMapState() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+export function useWorldMapState(initialPosition?: string | null) {
+  const [state, dispatch] = useReducer(reducer, initialPosition, makeInitialState);
 
   const selectNode = useCallback((repoKey: string) => {
     dispatch({ type: "SELECT_NODE", repoKey });

@@ -86,7 +86,7 @@ function RepositoryDetailPage() {
       </div>
 
       <Link to="/users/$username" params={{ username }} className="self-start text-sm text-rpg-gold underline">
-        ← HOMEへ戻る
+        ← World Mapへ戻る
       </Link>
     </div>
   );

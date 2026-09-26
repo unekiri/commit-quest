@@ -2,6 +2,7 @@ import type { RepositoryDto } from "@commit-quest/types";
 import { RpgPanel } from "@commit-quest/ui";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useLastVisitedRepository } from "../features/world-map/LastVisitedRepositoryContext";
 
 export type CommandWindowProps = {
   username: string;
@@ -25,6 +26,7 @@ const MENU_ITEMS: { key: MenuKey; label: string }[] = [
 export function CommandWindow({ username, repo, onClose }: CommandWindowProps) {
   const navigate = useNavigate();
   const router = useRouter();
+  const { setLastVisited } = useLastVisitedRepository();
   const [cursor, setCursor] = useState(0);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -52,6 +54,9 @@ export function CommandWindow({ username, repo, onClose }: CommandWindowProps) {
 
   function activate(key: MenuKey) {
     if (key === "adventure") {
+      // Remember which node the character was on so returning to World Map
+      // (link or browser Back) restores the character here instead of HOME.
+      setLastVisited({ username, repoKey: `${repo.owner}/${repo.name}` });
       void navigate({
         to: "/users/$username/repos/$owner/$repo",
         params: { username, owner: repo.owner, repo: repo.name },

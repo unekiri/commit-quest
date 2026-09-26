@@ -2,6 +2,7 @@ import type { RepositoryDto } from "@commit-quest/types";
 import { RpgPanel } from "@commit-quest/ui";
 import { useEffect, useRef } from "react";
 import { useMediaQuery } from "../lib/use-media-query";
+import { useLastVisitedRepository } from "../features/world-map/LastVisitedRepositoryContext";
 import { HOME_POSITION, useWorldMapState } from "../features/world-map/useWorldMapState";
 import { CommandWindow } from "./CommandWindow";
 
@@ -68,7 +69,24 @@ function MapNode({
 export function WorldMap({ username, repos }: WorldMapProps) {
   const mainRepos = repos.slice(0, 8);
   const overflowRepos = repos.slice(8);
-  const { state, selectNode, arrived, returnHome } = useWorldMapState();
+
+  // Only trust the last-visited Repository when it belongs to this user;
+  // e.g. a different username in the URL should never inherit stale state.
+  const { lastVisited, setLastVisited } = useLastVisitedRepository();
+  const initialPosition = lastVisited && lastVisited.username === username ? lastVisited.repoKey : null;
+  const { state, selectNode, arrived, returnHome } = useWorldMapState(initialPosition);
+
+  // Command Window's "戻る" sends the character back to HOME; that's the
+  // player explicitly stepping away from the Repository they'd chosen, so
+  // it also forgets it here — otherwise a later remount of World Map (e.g.
+  // navigating away and back without visiting Repository Detail again)
+  // would resurrect a selection the player had already backed out of.
+  function handleCommandWindowClose() {
+    if (lastVisited && lastVisited.username === username) {
+      setLastVisited(null);
+    }
+    returnHome();
+  }
 
   const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const isDesktopLayout = useMediaQuery("(min-width: 640px)");
@@ -229,7 +247,7 @@ export function WorldMap({ username, repos }: WorldMapProps) {
       ) : null}
 
       {state.commandOpen && selectedRepo ? (
-        <CommandWindow username={username} repo={selectedRepo} onClose={returnHome} />
+        <CommandWindow username={username} repo={selectedRepo} onClose={handleCommandWindowClose} />
       ) : null}
     </div>
   );

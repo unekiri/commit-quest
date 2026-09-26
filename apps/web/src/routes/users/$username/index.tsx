@@ -28,7 +28,7 @@ function DashboardPage() {
     <div className="flex flex-col gap-4">
       <PlayerStatus user={userQuery.data} />
       <div>
-        <h3 className="mb-2 text-sm font-bold text-rpg-gold">Repositories</h3>
+        <h3 className="mb-2 text-sm font-bold text-rpg-gold">World Map</h3>
         {repos.length === 0 ? <EmptyState /> : <WorldMap username={username} repos={repos} />}
       </div>
 

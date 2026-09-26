@@ -150,6 +150,8 @@ URL / Route（page等）     → TanStack Router
 キャラクター位置・Command Window → React State（useWorldMapState）
 ```
 
+Repository Detailから「← World Mapへ戻る」（リンク／ブラウザBack）で戻った際は、直前に「冒険する」を選んだRepositoryノード上にキャラクターが立っている状態（Command Windowは閉）で表示する。このキャラクター位置はURLには載せず、`/users/$username`のレイアウトルート（`route.tsx`、子ルート間の遷移でもマウントされ続ける）に置いた`LastVisitedRepositoryContext`（React Context）で保持し、`useWorldMapState`の初期値として渡している。リロード時は初期状態（HOME）に戻る。
+
 ### Router loaderとQuery Cacheの連携
 
 Repository Detailルートで、`createRootRouteWithContext`によりRouter contextへ`queryClient`を渡し、`loader`から`queryClient.ensureQueryData`でRepositoryとCommit一覧のデータを`Promise.all`で並行取得するようにした。コンポーネント側は`useSuspenseQuery`でそのキャッシュを読むだけになり、Loading/ErrorはRouteの`pendingComponent` / `errorComponent`に委譲している。Query Cacheが既にあれば再利用されるため、同じRepositoryへ再度遷移した際の待ち時間が減る。Routerの`defaultPreloadStaleTime`は`0`にし、鮮度判定はQuery側（`staleTime`）に一本化した。
