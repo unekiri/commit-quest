@@ -15,7 +15,7 @@
 - Hono
 - GitHub REST API
 
-一方で、面接用の成果物として見ると、以下の課題がある。
+一方で、成果物として見ると、以下の課題がある。
 
 1. GitHub API呼び出しが多く、Rate Limitに到達しやすい
 2. RPG風UIは存在するが、インタラクションがまだ弱い
@@ -23,7 +23,7 @@
 4. Dashboard上のTotal Commit表現が実データと一致しない
 5. Cloudflareを利用する技術的な意味を、もう一段出せる余地がある
 
-本ドキュメントでは、面接までに優先して改善すべき内容を整理する。
+本ドキュメントでは、優先して改善すべき内容を整理する。
 
 ---
 
@@ -152,7 +152,7 @@ Repositoryをクリック
 
 となっており、通常のWeb UIに近い。
 
-募集要項で求められている以下の要素へのアピールがまだ弱い。
+「RPG風に可視化する」というコンセプトに対して、以下の要素の表現がまだ弱い。
 
 - RPGメタファー
 - フィールド移動
@@ -282,7 +282,7 @@ Loading
 Render
 ```
 
-これでも問題はないが、面接時のアピールとしてはやや弱い。
+これでも問題はないが、RouterとQueryの連携としてはやや弱い。
 
 ## 5.2 改善方針
 
@@ -339,7 +339,7 @@ useSuspenseQuery(
 
 ## 5.4 狙い
 
-面接時に以下を説明できる状態にする。
+以下を説明できる構成にする。
 
 > TanStack RouterとTanStack Queryを個別に導入しただけではなく、RouterのloaderからQuery Cacheを利用し、画面遷移前に必要なServer Stateをprefetchする構成を試しました。
 
@@ -474,7 +474,7 @@ Commit Detail     30秒〜1分
 
 Cloudflare Workerを単なるProxyではなく、Edge APIとして活用する。
 
-面接では以下の説明が可能になる。
+以下の説明が可能になる。
 
 > Client側ではTanStack QueryによるServer State Cache、API側ではCloudflare Cacheを使い、クライアントキャッシュとEdgeキャッシュの責務を分けました。
 
@@ -567,7 +567,7 @@ APIとWebを同一originで公開することで、CORS構成を単純化でき�
 
 ---
 
-# 9. 面接までの実装順
+# 9. 実装順
 
 ## Step 1
 N+1 GitHub API問題を解消する
@@ -589,15 +589,9 @@ Cloudflareへdeployする
 
 ---
 
-# 10. 面接で説明する改善ストーリー
-
-以下の流れで説明する。
+# 10. 改善の経緯
 
 ```text
-募集要項確認
-  ↓
-未経験技術を洗い出し
-  ↓
 MVPを作成
   ↓
 実際に動作確認
@@ -611,23 +605,15 @@ N+1リクエストだと判明
 Router / Query / UI Stateの責務も整理
 ```
 
-説明例:
-
-> 募集要項を見て、TanStack Router/Query、Tailwind CSS、Turborepoが自分の未経験領域だったため、実際に手を動かして理解する目的でMVPを作りました。
->
-> GitHubの開発活動をRPG風に可視化するアプリとして、WebとAPIをTurborepoで管理し、React 19、Vite、TanStack Router/Query、Tailwind CSS、Cloudflare Workers、Honoで構成しました。
->
-> 実際に動作確認したところ、Repository一覧取得時に各RepositoryのCommit数を取得していたためN+1リクエストになり、GitHub APIのRate Limitにも到達しました。
->
-> そのため、一覧では必要最低限のデータだけを取得し、詳細画面へ入ったタイミングでCommit情報を取得するLazy Loadingへ変更しました。
->
-> また、Server StateはTanStack Query、URL StateはTanStack Router、キャラクター位置やコマンドUIなどのClient StateはReact Stateと、状態の責務も分離しています。
+- Repository一覧取得時に各RepositoryのCommit数を取得していたためN+1リクエストになり、GitHub APIのRate Limitに到達した。
+- 一覧では必要最低限のデータだけを取得し、詳細画面へ入ったタイミングでCommit情報を取得するLazy Loadingへ変更する。
+- Server StateはTanStack Query、URL StateはTanStack Router、キャラクター位置やコマンドUIなどのClient StateはReact Stateと、状態の責務を分離する。
 
 ---
 
 # 11. 完成イメージ
 
-面接時に以下のデモができる状態を目標とする。
+以下のデモができる状態を目標とする。
 
 ```text
 1. Home
