@@ -16,7 +16,7 @@ GitHub のコミット情報を取得し、RPG風のUIで可視化するMVPを�
 - pnpm
 - GitHub REST API
 
-副次目的として、以下を面接時に説明できる状態にする。
+副次目的として、以下を実際に経験し、説明できる状態にする。
 
 - APIから取得したServer StateをTanStack Queryで管理した経験
 - SPAのルーティングをTanStack Routerで構築した経験
@@ -928,7 +928,7 @@ pnpm dev
 - client/service/mapperを分離する
 - GitHub APIのレスポンスをそのままUIへ返さない
 
-## 26. 面接デモ時に見せるポイント
+## 26. デモ手順
 
 以下の順番でデモする。
 
